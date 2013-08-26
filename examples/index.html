@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/bootstrap.css" type="text/css">
+    <link rel="stylesheet" href="./css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="./css/fira.css" type="text/css">
+    <link rel="stylesheet" href="./css/main.css" type="text/css">
+    <title>Simple EXIF Loader</title>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="file-input-wrapper" style="display: block; float: right; padding: 2px 0 0 0">
+        <input type="file" onchange="renderFile(this.files[0])" title="Choose a file...">
+      </div>
+      <h3 class="text-muted">
+        EXIF JS
+      </h3>
+    </div>
+    <div id="dropbox">
+      <div id="thumbnailContainer" style="display: none">
+          <img id="thumbnail"/>
+      </div>
+      <span id="dropLabel">Drop jpeg file here <br>or<br>
+      <a id="downloadSampleImage">download sample image</a></span>
+      <div id="metaData">
+        <table id="exifTags"></table>
+      </div>
+    </div>
+  </div>
+<script src="js/jquery.min.js"></script>
+<script src="js/fileSaver.js"></script>
+<script src="../lib/canvasToBlob.js" type="text/javascript"></script>
+<script src="../jpeg.js"></script>
+<script src="js/bootstrap.file-input.js" type="text/javascript"></script>
+
+<script>
+
+  var init = function() {
+
+    $('input[type=file]').bootstrapFileInput();
+    $('.file-inputs').bootstrapFileInput();
+
+    var dropbox = document.getElementById('dropbox');
+    var canvas = document.getElementById('exifCanvas');
+    var loadedFile;
+    var rotation = 0;
+
+    var downloadSampleImage = function() {
+      var request = new XMLHttpRequest();
+      request.open("GET", "/exif-parser/examples/images/sample.jpg", true);
+      request.responseType = "arraybuffer";
+
+      request.onload = function (event) {
+        var arrayBuffer = request.response; // Note: not request.responseText
+        var blob = new Blob([arrayBuffer],{type: "image/jpeg"});
+        renderFile(blob);
+      };
+      var dropLabel = document.getElementById('dropLabel');
+      dropLabel.innerHTML = 'Loading file...';
+      request.send(null);
+    };
+
+    document.getElementById('downloadSampleImage').onclick = downloadSampleImage;
+    document.getElementById('downloadSampleImage').style.cursor = 'pointer';
+
+    var noopHandler = function(evt) {
+     evt.stopPropagation();
+     evt.preventDefault();
+    };
+
+    var drop = function(evt) {
+     var files = evt.dataTransfer.files;
+     var count = files.length;
+     evt.stopPropagation();
+     evt.preventDefault();
+     // Only call the handler if 1 or more files are dropped.
+     if (count > 0) {
+       document.getElementById("dropLabel").innerHTML = "Processing " + files[0].name;
+       renderFile(files[0]);
+      }
+    };
+
+    var resetThumbnail = function() {
+      var thumbnailContainer = document.getElementById('thumbnailContainer');
+      thumbnailContainer.style.display = 'none';
+    };
+
+    var resetMetaData = function() {
+      var exifTagsTable = document.getElementById('exifTags');
+      exifTagsTable.innerHTML = "";
+      document.getElementById('dropLabel').style.display = 'inline-block';
+    }
+
+    var renderThumbnail = function(thumbnailBlob, rotation) {
+      var thumbnail = document.getElementById('thumbnail');
+      var thumbnailContainer = document.getElementById('thumbnailContainer');
+      thumbnail.src = URL.createObjectURL(thumbnailBlob);
+      thumbnailContainer.style.display = 'block';
+      thumbnail.onload = function(event) {
+        var height;
+        var imageElement = event.srcElement || event.target;
+        var height =  Math.max(imageElement.height,imageElement.width);
+        thumbnailContainer.style.height = height + "px";
+        thumbnailContainer.style.width = thumbnailContainer.style.height + "px";
+      }
+      if (rotation) {
+        thumbnail.style["-webkit-transform"] = "none";
+        thumbnail.style["-webkit-transform"] = "rotate(" + rotation + "deg)";
+        thumbnail.style["transform"] = "rotate(" + rotation + "deg)";
+        thumbnail.style["margin"] = "45px 0px 45px 0px";
+      }
+    }
+
+    var renderTag = function(label, value) {
+      var tagsTable = document.getElementById('exifTags');
+      var tagRow = document.createElement('tr');
+      var tagLabel = document.createElement('td');
+      var tagValue = document.createElement('td');
+      var valueText = document.createElement('span');
+      var numerator;
+      valueText.id = label + "Value";
+      tagLabel.innerHTML = label;
+      tagLabel.classList.add('exifLabel');
+      tagValue.classList.add('exifValue');
+      if (typeof value === "object") {
+        denominator = value.denominator || 1;
+        value = value.numerator / denominator;
+      }
+      valueText.innerHTML = value;
+      valueText.style.display = 'inline-block';
+      valueText.style['minWidth'] = '20px';
+      tagValue.appendChild(valueText);
+      tagRow.appendChild(tagLabel);
+      tagRow.appendChild(tagValue);
+      tagsTable.appendChild(tagRow);
+      return tagValue;
+    };
+
+    var displayMetaData = function(metaData){
+      var tag;
+      var tagsTable = document.getElementById('exifTags');
+      var orientationTagRow;
+      var rotationIcon = document.createElement('i');
+      var okIcon = document.createElement('i');
+      var rotateButton = document.createElement('a');
+      var saveButton = document.createElement('a');
+      document.getElementById('dropLabel').style.display = 'none';
+      tagsTable.innerHTML = "";
+      if (metaData.Orientation) {
+        orientationTagValue = renderTag("Orientation", metaData.Orientation);
+        rotationIcon.classList.add('icon-rotate-right');
+        okIcon.classList.add('icon-ok');
+        rotateButton.classList.add('btn');
+        rotateButton.appendChild(rotationIcon);
+        rotateButton.innerHTML += " Rotate";
+        rotateButton.style.margin = "0px 0px 5px 30px";
+        rotateButton.onclick = rotateRight;
+        saveButton.classList.add('btn');
+        saveButton.classList.add('btn-success');
+        saveButton.innerHTML += " Save File";
+        saveButton.style.margin = "0px 0px 5px 20px";
+        saveButton.onclick = saveFile;
+        orientationTagValue.appendChild(rotateButton);
+        orientationTagValue.appendChild(saveButton);
+      }
+      for (tag in metaData) {
+        if (metaData.hasOwnProperty(tag)) {
+          if (tag === "Orientation") {
+            continue;
+          }
+          renderTag(tag, metaData[tag]);
+        }
+      }
+    };
+
+    renderFile = function(file){
+      var dropLabel = document.getElementById('dropLabel');
+      dropLabel.innerHTML = 'Loading file...';
+      loadedFile = file;
+      JPEG.readMetaData(file, file.size, function(error, metaData) {
+        resetMetaData();
+        if (error) {
+          dropLabel.innerHTML = error;
+          dropLabel.style.color = "red";
+        } else {
+          loadedImageMetaData = metaData.Exif || metaData.JFIF
+          displayMetaData(loadedImageMetaData);
+        }
+        resetThumbnail();
+        if (metaData.thumbnailBlob) {
+          renderThumbnail(metaData.thumbnailBlob, exifSpec.orientationDegrees[loadedImageMetaData.Orientation]);
+        }
+      });
+    };
+
+    var saveFile = function() {
+      if (!loadedFile) {
+        return;
+      }
+      JPEG.writeExifMetaData(loadedFile,
+        {
+          "GPSLatitudeRef":"N",
+          "GPSLatitude":{
+            "numerator":37,
+            "denominator":1
+          },
+          "GPSLongitudeRef":"W",
+          "GPSLongitude":{
+            "numerator":122,
+            "denominator":1
+          },
+          "GPSAltitudeRef":0,
+          "GPSAltitude":{
+            "numerator":4684,
+            "denominator":1157
+          },
+          "GPSTimeStamp":{
+            "numerator":20,
+            "denominator":1
+          },
+          "GPSImgDirectionRef":"T",
+          "GPSImgDirection":{
+            "numerator":68207,
+            "denominator":846
+          },
+          "Make":"Apple",
+          "Model":"iPhone 5",
+          "Orientation": loadedImageMetaData.Orientation,
+          "XResolution":{
+            "numerator":72,
+            "denominator":1
+          },
+          "YResolution":{
+            "numerator":72,
+            "denominator":1
+          },
+          "ResolutionUnit":2,
+          "Software":"7.0",
+          "DateTime":"2013:09:25 13:54:39",
+          "YCbCrPositioning":1,
+          "ExifTag":198,
+          "GPSTag":940,
+          "ExposureTime":{
+            "numerator":1,
+            "denominator":2358
+          },
+          "FNumber":{
+            "numerator":12,
+            "denominator":5
+          },
+          "ExposureProgram":2,
+          "ISOSpeedRatings":50,
+          "ExifVersion":48,
+          "DateTimeOriginal":"2013:09:25 13:54:39",
+          "DateTimeDigitized":"2013:09:25 13:54:39",
+          "ComponentsConfiguration":1,
+          "ShutterSpeedValue":{
+            "numerator":3686,
+            "denominator":329
+          },
+          "ApertureValue":{
+            "numerator":4845,
+            "denominator":1918
+          },
+          "BrightnessValue":{
+            "numerator":10305,
+            "denominator":982
+          },
+          "MeteringMode":5,
+          "Flash":24,
+          "FocalLength":{
+            "numerator":103,
+            "denominator":25
+          },
+          "SubjectArea":0,
+          "MakerNote":0,
+          "SubSecTimeOriginal":"860",
+          "SubSecTimeDigitized":"860",
+          "FlashpixVersion":48,
+          "ColorSpace":1,
+          "PixelXDimension":2448,
+          "PixelYDimension":3264,
+          "SensingMethod":2,
+          "SceneType":1,
+          "ExposureMode":0,
+          "WhiteBalance":0,
+          "FocalLengthIn35mmFilm":33,
+          "SceneCaptureType":0,
+          "LensSpecification":{
+            "numerator":103,
+            "denominator":25
+          },
+          "LensMake":"Apple",
+          "LensModel":"iPhone 5 back camera 4.12mm f/2.4",
+          "segmentOffset":20,
+          "segmentLength":8593,
+          "preview":{
+            "filename":".gallery/previews/sample.jpg",
+            "width":320,
+            "height":426.6666666666667
+          },
+          "rotation":90,
+          "mirrored":false,
+          "type":"jpeg",
+          "width":2448,
+          "height":3264
+        },
+        function(error, blob) {
+          saveAs(blob, "test.jpg");
+      });
+    }
+
+    var rotateRight = function() {
+      var height;
+      var thumbnail = document.getElementById('thumbnail');
+      var orientationValue = document.getElementById('OrientationValue');
+      rotation += 90;
+      thumbnail.style["-webkit-transform"] = 'rotate(' + rotation  +'deg)';
+      thumbnail.style["transform"] = 'rotate(' + rotation  +'deg)';
+      loadedImageMetaData.Orientation = exifSpec.rotateImage(loadedImageMetaData.Orientation, 90);
+      // if (rotation % 360 === 90 || rotation % 360 === 270) {
+      //     thumbnail.style.position = "relative";
+      //     thumbnail.style.bottom = "0";
+      // } else {
+      //   thumbnail.style.position = "static";
+      // }
+      orientationValue.innerHTML = loadedImageMetaData.Orientation;
+    };
+
+    dropbox.addEventListener("dragenter", noopHandler, false);
+    dropbox.addEventListener("dragexit", noopHandler, false);
+    dropbox.addEventListener("dragover", noopHandler, false);
+    dropbox.addEventListener("drop", drop, false);
+  };
+
+  $(window).load(init);
+
+</script>
+</body>
+</html>

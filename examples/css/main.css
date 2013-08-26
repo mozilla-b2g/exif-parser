@@ -1,0 +1,75 @@
+canvas {
+  cursor: pointer;
+  -webkit-user-select: none;
+}
+input{
+  font-size: 20px;
+}
+.btn{
+  -moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;
+}
+
+body{
+  font-family: "Fira Sans", Helvetica, Arial, sans-serif;
+}
+
+#dropbox {
+  padding: 40px 0 40px 0;
+  font-size: 21px;
+  font-weight: 200;
+  line-height: 2.1428571435;
+  color: inherit;
+  background-color: #eeeeee;
+  border-radius: 6px;
+  text-align: center;
+  width: 100%;
+  display: inline-block;
+}
+
+#thumbnail {
+  transition: all 0.3s ease;
+}
+
+/*#foxtail {
+  height: 156px;
+  width: 156px;
+  position: absolute;
+  top: 90px;
+  left: 30px;
+  background: url("../images/foxtail.png") no-repeat scroll 0px 0px transparent;
+  animation: animate-tail 3.75s steps(44) infinite;
+}
+
+@keyframes animate-tail {
+  0% {background-position: -6864px 0; }
+  100% {background-position: 0 0;}
+}
+*/
+#thumbnailContainer {
+  padding-top: 30px;
+}
+
+#dropLabel{
+  display: inline-block;
+  font-size: 22px;
+}
+
+#exifTags{
+  margin: 0 auto; /* or margin: 0 auto 0 auto */
+}
+
+#exifTags td.exifLabel{
+  float: left;
+  font-weight: bold;
+}
+
+#exifTags td.exifValue{
+  text-align: left;
+  padding-left: 10px;
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 730px;
+  }
+}
