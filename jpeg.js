@@ -2530,9 +2530,14 @@ this.exifSpec = {
         numberOfEntries++;
       }
     });
-    if (numberOfEntries) {
+    if (numberOfEntries ||
+        IFDType === 2 && metaData.ExifTag ||
+        IFDType === 3 && metaData.GPSTag ||
+        IFDType === 4 && metaData.InteroperabilityTag) {
+
       blobView.setUint16(IFDOffset, numberOfEntries, false);
       bytesWritten += 2;
+
     }
     // IFDType Image (IFD0) holds pointer to IFD1 (Thumbnnail)
     if (IFDType === 1) { // Image
@@ -2769,13 +2774,13 @@ this.exifSpec = {
     }
     // Number of entries counter (2bytes)
     lengths.IFD0Length += 2;
-    if (ExifTags) {
+    if (metaData.ExifTag) {
       lengths.ExifIFDLength += 2;
     }
-    if (GPSTags) {
+    if (metaData.GPSTag) {
       lengths.GPSIFDLength += 2;
     }
-    if (interoperabilityTags) {
+    if (metaData.InteroperabilityTag) {
       lengths.interoperabilityIFDLength += 2;
     }
     return lengths;
@@ -2853,8 +2858,8 @@ this.exifSpec = {
     // 2 bytes magic number (42) + 4 bytes 0th IFD offset
     // Section 4.5.2 of Exif standard Version 2.2
     var headerLength = 18;
-    var IFDLengths = headerLength + IFD0Length + IFD1Length + ExifIFDLength + GPSIFDLength;
-    var DataSectionsLength = IFD0LengthDataSection + IFD1LengthDataSection + ExifIFDLengthDataSection + GPSIFDLengthDataSection;
+    var IFDLengths = headerLength + IFD0Length + IFD1Length + ExifIFDLength + GPSIFDLength + interoperabilityIFDLength;
+    var DataSectionsLength = IFD0LengthDataSection + IFD1LengthDataSection + ExifIFDLengthDataSection + GPSIFDLengthDataSection + interoperabilityLengthDataSection;
     var segmentLength = IFDLengths + DataSectionsLength;
     var segmentLengthWithThumbnail = thumbnailBlob? segmentLength + thumbnailBlob.size : segmentLength;
     var writtenBytesError = "Written bytes and segment length don't match. There was a problem creating the segment";
@@ -2890,7 +2895,7 @@ this.exifSpec = {
       }
       // IDFid: 2 / Photo
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + ExifIFDLength, 2, metaData);
-      // IDFid: 1 / GPSInfo
+      // IDFid: 3 / GPSInfo
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + GPSIFDLength, 3, metaData);
       // IDFid: 4 / Iop
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + interoperabilityIFDLength, 4, metaData);
