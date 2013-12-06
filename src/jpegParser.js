@@ -12,8 +12,8 @@
   };
 
   var metaDataTypes = {
-    "Exif" : Exif,
-    "JFIF" : JFIF
+    "Exif" : JPEG.Exif,
+    "JFIF" : JPEG.JFIF
   };
 
   var readSegmentMarker = function(blobView, offset) {
@@ -25,7 +25,7 @@
   };
 
   var readSegmentLength = function(blobView, offset) {
-    var segmentType = jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
+    var segmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
     if (segmentType === "SOS" || segmentType.indexOf("RST") === 0) {
       return findNextSegmentOffset(blobView, offset) - offset;
     }
@@ -126,7 +126,7 @@
   };
 
   var validateExifSegment = function(blobView, offset) {
-    var firstSegmentType = jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
+    var firstSegmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
     var firstSegmentFormat = readSegmentFormat(blobView, offset);
     if (firstSegmentType !== "APP1" || firstSegmentFormat !== "Exif") {
       return false;
@@ -135,7 +135,7 @@
   };
 
   var readJPEGSegments = function(blob, size, callback, validateFirstSegment) {
-    BlobView.get(blob, 0, size, function(blobView) {
+    JPEG.BlobView.get(blob, 0, size, function(blobView) {
       if (validateJPEGFile(blobView) === false) {
         callback("Not a valid JPEG file");
       } else {
@@ -149,7 +149,7 @@
   };
 
   var insertSegment = function(segmentBlob, blob, metaDataType, callback) {
-    BlobView.get(blob, 0, blob.size, function(blobView) {
+    JPEG.BlobView.get(blob, 0, blob.size, function(blobView) {
       var blobSegments;
       var blob;
       var blobBeforeSegment;
@@ -204,7 +204,7 @@
       };
       if (metaDataTypes[metaDataType]) {
         if (segmentsMetaData[metaDataType]) {
-          newMetaData = Exif.mergeObjects(segmentsMetaData[metaDataType], newMetaData);
+          newMetaData = JPEG.Exif.mergeObjects(segmentsMetaData[metaDataType], newMetaData);
         }
         if (createNewThumbnail) {
           metaDataTypes[metaDataType].createThumbnail(blob, thumbnailCreated, 16);
@@ -236,7 +236,6 @@
   };
 
   this.JPEG = this.JPEG || {};
-
   this.JPEG.readMetaData = readMetaData;
   this.JPEG.readExifMetaData = readExifMetaData;
   this.JPEG.writeExifMetaData = writeExifMetaData;

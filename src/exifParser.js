@@ -12,6 +12,8 @@
     "TIFFFirstIFD" : 14
   };
 
+  var exifSpec = JPEG.exifSpec;
+
   var mergeObjects = function(object1, object2) {
     for (var tag in object2) {
       if (object2.hasOwnProperty(tag)) {
@@ -260,13 +262,12 @@
       }
     });
     if (numberOfEntries ||
-        IFDType === 2 && metaData.ExifTag ||
-        IFDType === 3 && metaData.GPSTag ||
-        IFDType === 4 && metaData.InteroperabilityTag) {
+        (IFDType === 2 && metaData.ExifTag) ||
+        (IFDType === 3 && metaData.GPSTag) ||
+        (IFDType === 4 && metaData.InteroperabilityTag)) {
 
       blobView.setUint16(IFDOffset, numberOfEntries, false);
       bytesWritten += 2;
-
     }
     // IFDType Image (IFD0) holds pointer to IFD1 (Thumbnnail)
     if (IFDType === 1) { // Image
@@ -594,7 +595,7 @@
     var writtenBytesError = "Written bytes and segment length don't match. There was a problem creating the segment";
     IFDBuffer = new ArrayBuffer(segmentLength);
     blob = new Blob([IFDBuffer], {type: "image/jpeg"});
-    BlobView.get(blob, 0, blob.size, function(blobView) {
+    JPEG.BlobView.get(blob, 0, blob.size, function(blobView) {
       offset += writeSegmentHeader(blobView, offset, segmentLengthWithThumbnail - 2);
       tiffHeaderOffset = offset;
       offset += writeTiffHeader(blobView, offset);
@@ -615,18 +616,18 @@
                                        GPSIFDLength + GPSIFDLengthDataSection;
       }
 
-      // IDFid: 1 / Image
+      // IFDid = 1 (Image)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + IFD0Length, 1, metaData, ExifIFDLength);
       if (IFD1Length) {
         thumbnailMetaData.JPEGInterchangeFormat = segmentLength - 10;
-        // IDFid: 1 / Image
+        // IFDid = 1 (Image)
         offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + IFD1Length, 1, thumbnailMetaData, ExifIFDLength);
       }
-      // IDFid: 2 / Photo
+      // IFDid = 2 (Photo)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + ExifIFDLength, 2, metaData);
-      // IDFid: 3 / GPSInfo
+      // IFDid = 3 (GPSInfo)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + GPSIFDLength, 3, metaData);
-      // IDFid: 4 / Iop
+      // IFDid = 4 (InterOperability)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + interoperabilityIFDLength, 4, metaData);
       if (offset !== segmentLength) {
         console.log(writtenBytesError);
@@ -675,11 +676,11 @@
     };
   };
 
-  this.Exif = this.Exif || {};
-
-  this.Exif.mergeObjects = mergeObjects;
-  this.Exif.readSegment = readSegment;
-  this.Exif.createSegment = createSegment;
-  this.Exif.createThumbnail = createThumbnail;
+  this.JPEG = this.JPEG || {};
+  this.JPEG.Exif = this.JPEG.Exif || {};
+  this.JPEG.Exif.mergeObjects = mergeObjects;
+  this.JPEG.Exif.readSegment = readSegment;
+  this.JPEG.Exif.createSegment = createSegment;
+  this.JPEG.Exif.createThumbnail = createThumbnail;
 
 }).call(this);

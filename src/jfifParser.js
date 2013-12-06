@@ -22,7 +22,8 @@
     };
   };
 
-  this.JFIF = this.JFIF || {};
-  this.JFIF.readSegment = readSegment;
+  this.JPEG = this.JPEG || {};
+  this.JPEG.JFIF = this.JPEG.JFIF || {};
+  this.JPEG.JFIF.readSegment = readSegment;
 
 }).call(this);
