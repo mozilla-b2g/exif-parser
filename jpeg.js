@@ -5,7 +5,9 @@
 */
 'use strict';
 
-var BlobView = (function() {
+var JPEG = JPEG || {};
+
+JPEG.BlobView = (function() {
   function fail(msg) {
     throw Error(msg);
   }
@@ -2162,7 +2164,8 @@ var getTagId = function(key) {
   return id;
 };
 
-this.exifSpec = {
+this.JPEG = this.JPEG || {};
+this.JPEG.exifSpec = {
   rotateImage: rotateImage,
   orientationDegrees: orientationDegrees,
   getTagId: getTagId,
@@ -2234,11 +2237,10 @@ this.exifSpec = {
     }
   };
 
-  var jpegSpec = {};
-  jpegSpec.segmentTypes = segmentTypes;
-  jpegSpec.APPSegmentFormats = APPSegmentFormats;
-
-  this.jpegSpec = jpegSpec;
+  this.JPEG = this.JPEG || {};
+  this.JPEG.jpegSpec = {};
+  this.JPEG.jpegSpec.segmentTypes = segmentTypes;
+  this.JPEG.jpegSpec.APPSegmentFormats = APPSegmentFormats;
 
 }).call(this);
 // JPEG File Interchange Format Parser
@@ -2265,8 +2267,9 @@ this.exifSpec = {
     };
   };
 
-  this.JFIF = this.JFIF || {};
-  this.JFIF.readSegment = readSegment;
+  this.JPEG = this.JPEG || {};
+  this.JPEG.JFIF = this.JPEG.JFIF || {};
+  this.JPEG.JFIF.readSegment = readSegment;
 
 }).call(this);
 (function() {
@@ -2282,6 +2285,8 @@ this.exifSpec = {
     "TIFFMagicNumber" : 12,
     "TIFFFirstIFD" : 14
   };
+
+  var exifSpec = JPEG.exifSpec;
 
   var mergeObjects = function(object1, object2) {
     for (var tag in object2) {
@@ -2530,7 +2535,11 @@ this.exifSpec = {
         numberOfEntries++;
       }
     });
-    if (numberOfEntries) {
+    if (numberOfEntries ||
+        (IFDType === 2 && metaData.ExifTag) ||
+        (IFDType === 3 && metaData.GPSTag) ||
+        (IFDType === 4 && metaData.InteroperabilityTag)) {
+
       blobView.setUint16(IFDOffset, numberOfEntries, false);
       bytesWritten += 2;
     }
@@ -2769,13 +2778,13 @@ this.exifSpec = {
     }
     // Number of entries counter (2bytes)
     lengths.IFD0Length += 2;
-    if (ExifTags) {
+    if (metaData.ExifTag) {
       lengths.ExifIFDLength += 2;
     }
-    if (GPSTags) {
+    if (metaData.GPSTag) {
       lengths.GPSIFDLength += 2;
     }
-    if (interoperabilityTags) {
+    if (metaData.InteroperabilityTag) {
       lengths.interoperabilityIFDLength += 2;
     }
     return lengths;
@@ -2853,14 +2862,14 @@ this.exifSpec = {
     // 2 bytes magic number (42) + 4 bytes 0th IFD offset
     // Section 4.5.2 of Exif standard Version 2.2
     var headerLength = 18;
-    var IFDLengths = headerLength + IFD0Length + IFD1Length + ExifIFDLength + GPSIFDLength;
-    var DataSectionsLength = IFD0LengthDataSection + IFD1LengthDataSection + ExifIFDLengthDataSection + GPSIFDLengthDataSection;
+    var IFDLengths = headerLength + IFD0Length + IFD1Length + ExifIFDLength + GPSIFDLength + interoperabilityIFDLength;
+    var DataSectionsLength = IFD0LengthDataSection + IFD1LengthDataSection + ExifIFDLengthDataSection + GPSIFDLengthDataSection + interoperabilityLengthDataSection;
     var segmentLength = IFDLengths + DataSectionsLength;
     var segmentLengthWithThumbnail = thumbnailBlob? segmentLength + thumbnailBlob.size : segmentLength;
     var writtenBytesError = "Written bytes and segment length don't match. There was a problem creating the segment";
     IFDBuffer = new ArrayBuffer(segmentLength);
     blob = new Blob([IFDBuffer], {type: "image/jpeg"});
-    BlobView.get(blob, 0, blob.size, function(blobView) {
+    JPEG.BlobView.get(blob, 0, blob.size, function(blobView) {
       offset += writeSegmentHeader(blobView, offset, segmentLengthWithThumbnail - 2);
       tiffHeaderOffset = offset;
       offset += writeTiffHeader(blobView, offset);
@@ -2881,18 +2890,18 @@ this.exifSpec = {
                                        GPSIFDLength + GPSIFDLengthDataSection;
       }
 
-      // IDFid: 1 / Image
+      // IFDid = 1 (Image)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + IFD0Length, 1, metaData, ExifIFDLength);
       if (IFD1Length) {
         thumbnailMetaData.JPEGInterchangeFormat = segmentLength - 10;
-        // IDFid: 1 / Image
+        // IFDid = 1 (Image)
         offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + IFD1Length, 1, thumbnailMetaData, ExifIFDLength);
       }
-      // IDFid: 2 / Photo
+      // IFDid = 2 (Photo)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + ExifIFDLength, 2, metaData);
-      // IDFid: 1 / GPSInfo
+      // IFDid = 3 (GPSInfo)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + GPSIFDLength, 3, metaData);
-      // IDFid: 4 / Iop
+      // IFDid = 4 (InterOperability)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + interoperabilityIFDLength, 4, metaData);
       if (offset !== segmentLength) {
         console.log(writtenBytesError);
@@ -2941,12 +2950,12 @@ this.exifSpec = {
     };
   };
 
-  this.Exif = this.Exif || {};
-
-  this.Exif.mergeObjects = mergeObjects;
-  this.Exif.readSegment = readSegment;
-  this.Exif.createSegment = createSegment;
-  this.Exif.createThumbnail = createThumbnail;
+  this.JPEG = this.JPEG || {};
+  this.JPEG.Exif = this.JPEG.Exif || {};
+  this.JPEG.Exif.mergeObjects = mergeObjects;
+  this.JPEG.Exif.readSegment = readSegment;
+  this.JPEG.Exif.createSegment = createSegment;
+  this.JPEG.Exif.createThumbnail = createThumbnail;
 
 }).call(this);
 (function() {
@@ -2963,8 +2972,8 @@ this.exifSpec = {
   };
 
   var metaDataTypes = {
-    "Exif" : Exif,
-    "JFIF" : JFIF
+    "Exif" : JPEG.Exif,
+    "JFIF" : JPEG.JFIF
   };
 
   var readSegmentMarker = function(blobView, offset) {
@@ -2976,7 +2985,7 @@ this.exifSpec = {
   };
 
   var readSegmentLength = function(blobView, offset) {
-    var segmentType = jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
+    var segmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
     if (segmentType === "SOS" || segmentType.indexOf("RST") === 0) {
       return findNextSegmentOffset(blobView, offset) - offset;
     }
@@ -3077,7 +3086,7 @@ this.exifSpec = {
   };
 
   var validateExifSegment = function(blobView, offset) {
-    var firstSegmentType = jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
+    var firstSegmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
     var firstSegmentFormat = readSegmentFormat(blobView, offset);
     if (firstSegmentType !== "APP1" || firstSegmentFormat !== "Exif") {
       return false;
@@ -3086,7 +3095,7 @@ this.exifSpec = {
   };
 
   var readJPEGSegments = function(blob, size, callback, validateFirstSegment) {
-    BlobView.get(blob, 0, size, function(blobView) {
+    JPEG.BlobView.get(blob, 0, size, function(blobView) {
       if (validateJPEGFile(blobView) === false) {
         callback("Not a valid JPEG file");
       } else {
@@ -3100,7 +3109,7 @@ this.exifSpec = {
   };
 
   var insertSegment = function(segmentBlob, blob, metaDataType, callback) {
-    BlobView.get(blob, 0, blob.size, function(blobView) {
+    JPEG.BlobView.get(blob, 0, blob.size, function(blobView) {
       var blobSegments;
       var blob;
       var blobBeforeSegment;
@@ -3155,7 +3164,7 @@ this.exifSpec = {
       };
       if (metaDataTypes[metaDataType]) {
         if (segmentsMetaData[metaDataType]) {
-          newMetaData = Exif.mergeObjects(segmentsMetaData[metaDataType], newMetaData);
+          newMetaData = JPEG.Exif.mergeObjects(segmentsMetaData[metaDataType], newMetaData);
         }
         if (createNewThumbnail) {
           metaDataTypes[metaDataType].createThumbnail(blob, thumbnailCreated, 16);
@@ -3187,7 +3196,6 @@ this.exifSpec = {
   };
 
   this.JPEG = this.JPEG || {};
-
   this.JPEG.readMetaData = readMetaData;
   this.JPEG.readExifMetaData = readExifMetaData;
   this.JPEG.writeExifMetaData = writeExifMetaData;

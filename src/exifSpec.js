@@ -1692,7 +1692,8 @@ var getTagId = function(key) {
   return id;
 };
 
-this.exifSpec = {
+this.JPEG = this.JPEG || {};
+this.JPEG.exifSpec = {
   rotateImage: rotateImage,
   orientationDegrees: orientationDegrees,
   getTagId: getTagId,

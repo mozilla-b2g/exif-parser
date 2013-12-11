@@ -60,10 +60,9 @@
     }
   };
 
-  var jpegSpec = {};
-  jpegSpec.segmentTypes = segmentTypes;
-  jpegSpec.APPSegmentFormats = APPSegmentFormats;
-
-  this.jpegSpec = jpegSpec;
+  this.JPEG = this.JPEG || {};
+  this.JPEG.jpegSpec = {};
+  this.JPEG.jpegSpec.segmentTypes = segmentTypes;
+  this.JPEG.jpegSpec.APPSegmentFormats = APPSegmentFormats;
 
 }).call(this);
