@@ -3063,10 +3063,16 @@ this.JPEG.exifSpec = {
     var APPSegment;
     var segmentLength;
     while (offset + 4 <= blobView.sliceLength) {
-      if (!validateSegment(blobView, offset)) {
-        throw "Invalid JPEG Segment at offset " + offset;
+      var segmentMarker = readSegmentMarker(blobView, offset);
+      var segmentType = readSegmentType(blobView, offset);
+      if (!(segmentMarker === 0xff && segmentType > 0x00 && segmentType < 0xff)) {
+        return segmentsMetaData;
       }
-      if (isAPPSegment(blobView, offset)) {
+      if(segmentType >= 0xC0 && segmentType <= 0xC3) {
+        // Get image dimensions
+        segmentsMetaData['height'] = blobView.getUint16(offset + 5);
+        segmentsMetaData['width'] = blobView.getUint16(offset + 7);
+      } else if(segmentType >= 0xE0 && segmentType <= 0xEF) {
         APPSegment = parseAPPSegment(blobView, offset);
         if (APPSegment) {
           segmentsMetaData[APPSegment.format] = APPSegment.metaData;
@@ -3180,9 +3186,15 @@ this.JPEG.exifSpec = {
 
   var readExifMetaData = function(blob, callback) {
     var processMetaData = function(error, metaData) {
+      var height = metaData && metaData.height;
+      var width = metaData && metaData.width;
       var thumbnailMetaData = metaData && metaData.thumbnailMetaData;
       var thumbnailBlob = metaData && metaData.thumbnailBlob;
       metaData = metaData && metaData.Exif;
+      if(metaData !== undefined) {
+        metaData['height'] = height;
+        metaData['width'] = width;
+      }
       callback(error, metaData, thumbnailMetaData, thumbnailBlob);
     };
     // We only read Start Of Image (SOI, 2 bytes) + APP1 segment that contains EXIF metada (64 KB)
