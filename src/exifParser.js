@@ -23,17 +23,17 @@
     return object1;
   };
 
-  var parseASCIIString = function(blobView, offset) {
+  var parseASCIIString = function(blobView, offset, count) {
+    // EXIF encodes arrays of strings by writing them as one long string
+    // with NUL separators. We're not going to interpret that here but
+    // will return any such array with the NULs in it. When written back
+    // out this will be in the correct format so everything should be okay.
     var value = "";
-    var character;
-    while (true) {
-      character = String.fromCharCode(blobView.getUint8(offset));
-      if (character === "\0") {
-        return value;
-      }
-      value += character;
-      offset++;
+    count -= 1; // The count includes the terminating NUL character
+    for(var i = 0; i < count; i++) {
+      value += String.fromCharCode(blobView.getUint8(offset + i));
     }
+    return value;
   };
 
   var writeTagValueArray = function(blobView, valueOffset, type, arrayOfValues, byteOrder) {
@@ -109,14 +109,14 @@
     return writtenBytes;
   };
 
-  var parseTagValue = function(blobView, valueOffset, typeId) {
+  var parseTagValue = function(blobView, valueOffset, typeId, count) {
     var numerator;
     var denominator;
     switch (typeId) {
       case 1: // BYTE
         return blobView.getUint8(valueOffset);
       case 2: // ASCII
-        return parseASCIIString(blobView, valueOffset);
+        return parseASCIIString(blobView, valueOffset, count);
       case 3: // SHORT
         return blobView.getUint16(valueOffset);
       case 4: // LONG
@@ -155,18 +155,22 @@
   var readTagValue = function(blobView, TIFFHeaderOffset, valueOffset, typeId, count) {
     var tagValues;
     var typeSize = exifSpec.tagTypeSize[typeId];
-    if (isIndirectAddressingTag(typeId, count)) {
+    // If the value doesn't fit here, then read its address
+    if (typeSize * count > 4) {
       valueOffset = TIFFHeaderOffset + blobView.getUint32(valueOffset);
     }
-    if (count === 1 || typeSize * count <= 4 || typeId === 2) { // typeId === ASCII
-      return parseTagValue(blobView, valueOffset, typeId);
+    if (count === 1 || typeId === 2) { // typeId === ASCII
+      // If there is just one value, parse it
+      return parseTagValue(blobView, valueOffset, typeId, count);
+    } else {
+      // Otherwise, parse an array of values
+      tagValues = [];
+      for (var i=0; i<count; ++i) {
+        tagValues.push(parseTagValue(blobView, valueOffset, typeId, 1));
+        valueOffset += typeSize;
+      }
+      return tagValues;
     }
-    tagValues = [];
-    for (var i=0; i<count; ++i) {
-      tagValues.push(parseTagValue(blobView, valueOffset, typeId));
-      valueOffset += typeSize;
-    }
-    return tagValues;
   };
 
   var writeRational = function(blobView, valueOffset, typeId, newValue, byteOrder) {
@@ -181,20 +185,13 @@
     return 8;
   };
 
-  var writeString = function(blobView, offset, str, nullTerminated) {
+  var writeString = function(blobView, offset, str) {
     var i;
     for (i = 0; i < str.length; ++i) {
       blobView.setUint8(offset + i, str.charCodeAt(i));
     }
     blobView.setUint8(offset + str.length, 0x0);
     return str.length + 1;
-  };
-
-  var isIndirectAddressingTag = function(typeId, count) {
-    return count > 4 ||
-           typeId === 5 || // RATIONAL
-           typeId === 10 ||  // SRATIONAL
-           typeId === 12; // DOUBLE
   };
 
   var readIFD = function(blobView, TIFFHeaderOffset, IFDOffset) {
@@ -243,16 +240,26 @@
       if (!tagInfo) {
         return;
       }
+      var type = tagInfo.type;
+      var typeSize = exifSpec.tagTypeSize[type];
+
       if (tagId && tagInfo.IFD === IFDType) {
         blobView.setUint16(offset, tagId, false); // Tag Id
-        blobView.setUint16(offset + 2, tagInfo.type, false); // Tag type
-        count = calculateTagValueCount(key, metaData[key]);
+        blobView.setUint16(offset + 2, type, false); // Tag type
+        count = calculateTagValueCount(type, metaData[key]);
         blobView.setUint32(offset + 4, count, false); // Tag Count. Number of values
-        if (count === 1) {
-          writeTagValue(blobView, offset + 8, tagInfo.type, metaData[key], false);
+
+        if (count * typeSize <= 4) { // It fits in the 4 byte address field
+          writeTagValue(blobView, offset + 8, type, metaData[key], false);
         } else {
           blobView.setUint32(offset + 8, valuesOffset - TIFFHeaderOffset, false);
-          bytesWrittenValue = writeTagValue(blobView, valuesOffset, tagInfo.type, metaData[key], false);
+          bytesWrittenValue = writeTagValue(blobView, valuesOffset, type, metaData[key], false);
+          // The valuesOffset should always be on a word boundary, so
+          // if we just wrote an odd number of bytes, (e.g. an even-length
+          // string plus a NUL terminator) we need to skip one so the next
+          // value is written at an even offset
+          if (bytesWrittenValue % 2 === 1)
+            bytesWrittenValue++;
           valuesOffset += bytesWrittenValue;
           bytesWritten += bytesWrittenValue;
         }
@@ -420,18 +427,12 @@
     return length;
   };
 
-  var calculateTagValueCount = function(tagName, value) {
-    var tagId = exifSpec.getTagId(tagName);
-    var tagType = exifSpec.tags[tagId].type;
+  var calculateTagValueCount = function(tagType, value) {
     if (Array.isArray(value)) {
       return value.length;
     }
-    // RATIONAL || SRATIONAL
-    if (tagType === 5 || tagType === 10) {
-      return 2;
-    }
-    // ASCII && length > 4
-    if (tagType === 2 && value.length > 4) {
+    // ASCII
+    if (tagType === 2) {
       return value.length + 1;
     }
     return 1;
@@ -466,9 +467,16 @@
       if (tagInfo) {
         valueSize = calculateTagValueSize(key, metaData[key]);
         // If value is 4 bytes or less is stored in the IFD and not in the data section
+        // If it is greater than 4 bytes it must be an even value to retain
+        // proper alignment
         if (valueSize <= 4) {
           valueSize = 0;
         }
+        else {
+          if (valueSize % 2 === 1)
+            valueSize += 1;
+        }
+
         if (tagInfo.IFD === 1) {
           lengths.IFD0Length += IFDSize;
           lengths.IFD0LengthDataSection += valueSize;
@@ -514,25 +522,6 @@
       lengths.interoperabilityIFDLength += 2;
     }
     return lengths;
-  };
-
-  var calculateDataSectionLength = function(metaData, IFDType) {
-    var valueSize = 0;
-    var length = 0;
-    Object.keys(metaData).forEach(function(key) {
-      var tagId = exifSpec.getTagId(key);
-      if (exifSpec.getTagId(key)) {
-        if (IFDType && exifSpec.tags[tagId].IFD !== IFDType) {
-          return;
-        }
-        valueSize = calculateTagValueSize(key, metaData[key]);
-        // If value is 4 bytes or less is stored in the IFD and not in the data section
-        if (valueSize > 4) {
-          length += valueSize;
-        }
-      }
-    });
-    return length;
   };
 
   var writeSegmentHeader = function(blobView, offset, length) {
