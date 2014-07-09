@@ -1,6 +1,6 @@
 /**
 * jpegjs.js v0.0.1 by @dmarcos 
-* Copyright 2013 Diego Marcos <diego.marcos@gmail.com>
+* Copyright 2014 Diego Marcos <diego.marcos@gmail.com>
 * 
 */
 'use strict';
@@ -3102,7 +3102,11 @@ this.JPEG.exifSpec = {
         if (validateFirstSegment && !validateFirstSegment(blobView, 2)) {
           callback("First segment not valid");
         } else {
-          callback(null, parseSegments(blobView), blobView);
+          try {
+            callback(null, parseSegments(blobView), blobView);
+          } catch(err) {
+            callback(err);
+          }
         }
       }
     });

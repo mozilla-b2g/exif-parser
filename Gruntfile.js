@@ -75,4 +75,6 @@
     // Default task.
     grunt.registerTask('default', ['jshint', 'concat']);
 
+    grunt.registerTask('dist', ['default', 'uglify']);
+
   };

@@ -142,7 +142,11 @@
         if (validateFirstSegment && !validateFirstSegment(blobView, 2)) {
           callback("First segment not valid");
         } else {
-          callback(null, parseSegments(blobView), blobView);
+          try {
+            callback(null, parseSegments(blobView), blobView);
+          } catch(err) {
+            callback(err);
+          }
         }
       }
     });
