@@ -4,10 +4,16 @@
     // Project configuration.
     grunt.initConfig({
       watch: {
-        livereload: {
-          options: { livereload: true },
-          files: ['src/*.js'],
-        }
+        options : {
+          atBegin: true
+        },
+        test: {
+          files: [
+            'src/**/*.js',
+            'lib/**/*.js'
+          ],
+          tasks: ['default']
+        },
       },
       jshint: {
         options: {
@@ -51,6 +57,7 @@
         },
         jpegjs: {
           src: [
+            'dependencies/lodash/dist/lodash.js',
             'lib/blob_view.js',
             'src/canvasToBlob.js',
             'src/exifSpec.js',
@@ -61,20 +68,22 @@
           ],
           dest: 'jpeg.js'
         }
+      },
+      karma: {
+        unit: {
+          configFile: 'karma.config.js'
+        }
       }
+
+
     });
 
-    grunt.loadNpmTasks('grunt-contrib-clean');
-    grunt.loadNpmTasks('grunt-contrib-concat');
-    grunt.loadNpmTasks('grunt-contrib-connect');
-    grunt.loadNpmTasks('grunt-contrib-copy');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
+    // Load NPM Grunt Tasks
+    require('load-grunt-tasks')(grunt);
 
     // Default task.
     grunt.registerTask('default', ['jshint', 'concat']);
-
+    grunt.registerTask('test', ['karma']);
     grunt.registerTask('dist', ['default', 'uglify']);
 
   };

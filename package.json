@@ -3,26 +3,28 @@
   "author": "Diego Marcos <diego.marcos@gmail.com>",
   "description": "JavaScrpt JPEG Meta Data Library",
   "version": "0.0.1",
-  "repository" : {
-    "type" : "git",
-    "url" : "http://github.com/dmarcos/exif-parser.git"
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/dmarcos/exif-parser.git"
   },
   "devDependencies": {
-    "mocha": "~1.7",
-    "chai": "1.8.0",
-    "phantomjs": "~1.9.2",
-    "mocha-phantomjs": "~3.1.2",
-    "grunt": "~0.4.1",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-connect": "~0.3.0",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-copy": "~0.4.0",
-    "grunt-contrib-jshint": "~0.6.0",
-    "grunt-contrib-uglify": "~0.2.2",
-    "grunt-contrib-qunit": "~0.2.2",
-    "grunt-contrib-watch": "~0.5.1"
+    "chai": "1.9.0",
+    "grunt": "0.4.5",
+    "grunt-contrib-clean": "0.5.0",
+    "grunt-contrib-concat": "0.4.0",
+    "grunt-contrib-copy": "0.5.0",
+    "grunt-contrib-jshint": "0.10.0",
+    "grunt-contrib-uglify": "0.5.0",
+    "grunt-contrib-watch": "0.6.1",
+    "grunt-karma": "0.8.3",
+    "karma": "0.12.16",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "0.1.4",
+    "karma-firefox-launcher": "0.1.3",
+    "karma-jasmine": "0.2.1",
+    "load-grunt-tasks": "0.6.0"
   },
-  "license" : "MIT",
+  "license": "MIT",
   "scripts": {
     "test": "./node_modules/mocha-phantomjs/bin/mocha-phantomjs test/read_test.html"
   }
