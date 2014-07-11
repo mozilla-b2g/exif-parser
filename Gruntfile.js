@@ -57,7 +57,7 @@
         },
         jpegjs: {
           src: [
-            'dependencies/lodash/dist/lodash.js',
+            'dependencies/sprintf/src/sprintf.js',
             'lib/blob_view.js',
             'src/canvasToBlob.js',
             'src/exifSpec.js',

@@ -4,9 +4,22 @@ module.exports = function(config) {
     frameworks: ['jasmine', 'chai'],
 
     files: [
+
+      // Deps
+      {
+        pattern: 'dependencies/lodash/dist/lodash.js',
+        watched: false,
+        included: true,
+        served: true
+      },
+
+      // Src
       'jpeg.js',
+
+      // Tests
       'test/js/**/*.js',
 
+      // Test Data
       {
         pattern: 'test/data/*.js',
         watched: true,

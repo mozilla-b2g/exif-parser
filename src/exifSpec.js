@@ -1652,60 +1652,103 @@ var makerNotes = [
   {
     tagProfix: 'Reconyx',
     firstEntry: 0,
+    // MakerNoteReconyx
+    //   00e0: 01 f1  <-- Identifier
     test: function(value) {
-      return value === parseInt('f101', 16);
+      return value === 61697;
     },
     tags: {
       "1" : {
         "key": "FirmwareVersion",
         "type": 3,
         "count": 3,
+        format: function(value) {
+          return value.join('.');
+        }
       },
       "4" : {
         "key": "FirmwareDate",
         "type": 3,
         "count": 2,
+        format: function(value) {
+          return sprintf('%.4x:%.2x:%.2x', value[0], value[1]>>8, value[1]&0xff);
+        }
       },
       "6" : {
         "key": "TriggerMode",
         "type": 2,
         "count": 1,
+        format: function(value) {
+          return {
+            'C': 'CodeLoc Not Entered',
+            'E': 'External Sensor',
+            'M': 'Motion Detection',
+            'T': 'Time Lapse'
+          }[value];
+        }
       },
       "7" : {
         "key": "Sequence",
         "type": 3,
-        "count": 2
+        "count": 2,
+        format: function(value) {
+          return value.join(' of ');
+        }
       },
       "9" : {
         "key": "EventNumber",
         "type": 3,
-        "count": 2
+        "count": 2,
+        format: function(value) {
+          return (value[0]<<16) + value[1];
+        }
       },
       "11" : {
         "key": "DateTimeOriginal",
         "type": 3,
-        "count": 6
+        "count": 6,
+        format: function(value) {
+          if (value[0] & 0xff00 && !(value[0] & 0xff)) {
+            for(var i = 0; i < value.length; i++) {
+              value[i] = (value[i] >> 8) | ((value[i] & 0xff) << 8);
+            }
+          }
+          return vsprintf('%.4d:%.2d:%.2d %.2d:%.2d:%.2d', _.at(value, [5,3,4,2,1,0]));
+        }
       },
       "18" : {
         "key": "MoonPhase",
         "type": 3,
-        "count": 1
+        "count": 1,
+        format: function(value) {
+          return {
+            0: 'New',
+            1: 'New Crescent',
+            2: 'First Quarter',
+            3: 'Waxing Gibbous',
+            4: 'Full',
+            5: 'Waning Gibbous',
+            6: 'Last Quarter',
+            7: 'Old Crescent'
+          }[value];
+        }
       },
       "19" : {
         "key": "AmbientTemperatureFahrenheit",
         "type": 8,
-        "count": 1
+        "count": 1,
+        format: function(value) {
+          return value + ' F';
+        }
       },
       "20" : {
         "key": "AmbientTemperature",
         "type": 8,
-        "count": 1
+        "count": 1,
+        format: function(value) {
+          return value + ' C';
+        }
       },
-      // "21" : {
-      //   "key": "SerialNumber",
-      //   "type": 2,
-      //   "count": 30
-      // },
       "36" : {
         "key": "Contrast",
         "type": 3,
@@ -1729,7 +1772,13 @@ var makerNotes = [
       "40" : {
         "key": "InfraredIlluminator",
         "type": 3,
-        "count": 1
+        "count": 1,
+        format: function(value) {
+          return {
+            0: 'Off',
+            1: 'On'
+          }[value];
+        }
       },
       "41" : {
         "key": "MotionSensitivity",
@@ -1739,7 +1788,10 @@ var makerNotes = [
       "42" : {
         "key": "BatteryVoltage",
         "type": 3,
-        "count": 1
+        "count": 1,
+        format: function(value) {
+          return value / 1000 + ' V';
+        }
       },
       "43" : {
         "key": "UserLabel",

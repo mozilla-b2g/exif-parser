@@ -92,8 +92,6 @@
         "thumbnailMetaData" : segment.thumbnailMetaData,
         "thumbnailBlob" : segment.thumbnailBlob
       };
-    } else {
-      console.log("Unkown APP segment format: " + segmentFormat);
     }
   };
 

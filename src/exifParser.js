@@ -122,10 +122,6 @@
       tag = blobView.getUint16(offset);
       typeId = blobView.getUint16(offset + 2);
       count = blobView.getUint32(offset + 4);
-      // if (tag === 37500) {
-      //   console.log('here');
-      //   readTagValue(blobView, TIFFHeaderOffset, offset + 8, typeId, count, true);
-      // }
       entries[tag] = {
         "tag": tag,
         "type" : typeId,
@@ -142,13 +138,8 @@
     };
   };
 
-  var readMakerNote = function(blobView, TIFFHeaderOffset, IFDOffset, entry) {
-    var offset = TIFFHeaderOffset + blobView.getUint32(entry.valueOffset);
-  //
-  //     | | 8)  MakerNoteReconyx (SubDirectory) -->
-  // | |     - Tag 0x927c (713 bytes, undef[713]):
-  // | |         00e0: 01 f1 03 00 03 00 00 00 11 20 10 01 4d 00 01 00 [......... ..M...]
-  // | |         00f0: 01 00 00 00 a4 00 35 00 28 00 12 00 07 00 04 00 [......5.(.......]
+  var readMakerNote = function(blobView, TIFFHeaderOffset, EntryValueOffset) {
+    var offset = TIFFHeaderOffset + blobView.getUint32(EntryValueOffset);
 
     var makerNotes = _.find(exifSpec.makerNotes, function(makerNotes) {
       return makerNotes.test(blobView.getUint16(offset + makerNotes.firstEntry));
@@ -157,8 +148,6 @@
     if (!makerNotes) {
       return;
     }
-
-    console.log(makerNotes);
 
     function readMakerTagValue(blobView, TIFFHeaderOffset, valueOffset, typeId, count) {
       var tagValues;
@@ -174,23 +163,24 @@
       return tagValues;
     }
 
+    var entries = {};
+
     _.each(makerNotes.tags, function(tag, tagOffset) {
-      var value = readMakerTagValue(blobView, TIFFHeaderOffset,  offset + _.parseInt(tagOffset, 10) * 2, tag.type, tag.count);
-      console.log(value);
-      // var valueOffset = offset + _.parseInt(tagOffset, 10) * 2;
-      // var tagValues = [];
-      // var typeSize = exifSpec.tagTypeSize[tag.type];
-      // if (count === 1 || typeId === 2) { // typeId === ASCII
-      //   return parseTagValue(blobView, valueOffset, typeId);
-      // }
-      // for (var i=0; i<tag.count; ++i) {
-      //   tagValues.push(parseTagValue(blobView, valueOffset , tag.type));
-      //   valueOffset += typeSize;
-      // }
-      // console.log(tagValues);
+      var valueOffset = offset + _.parseInt(tagOffset, 10) * 2;
+      entries[tagOffset] = {
+        "tag": tag,
+        "type" : tag.type,
+        "count" : tag.count,
+        "value" : readMakerTagValue(blobView, TIFFHeaderOffset, valueOffset, tag.type, tag.count),
+        "valueOffset" : valueOffset
+      };
+
     });
 
-
+    return {
+      tagProfix: makerNotes.tagProfix,
+      entries: entries
+    };
   };
 
   var makeDirectoryEntriesHumanReadable = function(entries) {
@@ -205,6 +195,25 @@
       tags[tagInfo.key] = entries[tag].value;
     });
     return tags;
+  };
+
+  var makeMakerNoteEntriesHumanReadable = function(tagProfix, entries) {
+    var metaData = {},
+      makerNotes = _.find(exifSpec.makerNotes, {tagProfix: tagProfix});
+
+    if (!makerNotes) {
+      return { };
+    }
+
+    _.each(entries, function(entry) {
+      if (entry.tag.format) {
+        metaData[entry.tag.key] = entry.tag.format(entry.value);
+      } else {
+        metaData[entry.tag.key] = entry.value;
+      }
+    });
+
+    return metaData;
   };
 
   var readTIFFByteOrder = function(blobView, TIFFOffset) {
@@ -286,13 +295,7 @@
 
     // Reads MakerNotes Block
     if(EXIFIFD.entries[exifSpec.getTagId("MakerNote")]) {
-      MakerNote = readMakerNote(
-        blobView,
-        TIFFHeaderOffset,
-        EXIFIFD.entries[exifSpec.getTagId("MakerNote")].valueOffset,
-        EXIFIFD.entries[exifSpec.getTagId("MakerNote")]
-
-      );
+      MakerNote = readMakerNote(blobView, TIFFHeaderOffset, EXIFIFD.entries[exifSpec.getTagId("MakerNote")].valueOffset);
     }
 
     return {
@@ -301,6 +304,7 @@
       "EXIFIFD" : EXIFIFD && EXIFIFD.entries,
       "GPSIFD"  : GPSIFD && GPSIFD.entries,
       "interoperabilityIFD" : interoperabilityIFD && interoperabilityIFD.entries,
+      "MakerNote" : MakerNote,
       "thumbnailBlob" : thumbnailBlob,
       "byteOrder" : byteOrder
     };
@@ -553,8 +557,16 @@
     var exifMetaData = segmentMetaData.IFD0;
     exifMetaData = mergeObjects(exifMetaData, segmentMetaData.EXIFIFD);
     exifMetaData = mergeObjects(exifMetaData, segmentMetaData.GPSIFD);
+
+    var metaData = makeDirectoryEntriesHumanReadable(exifMetaData);
+
+    if (segmentMetaData.MakerNote) {
+      var makerMetadata = makeMakerNoteEntriesHumanReadable(segmentMetaData.MakerNote.tagProfix, segmentMetaData.MakerNote.entries);
+      metaData = _.merge(metaData, makerMetadata);
+    }
+
     return {
-      "metaData" : makeDirectoryEntriesHumanReadable(exifMetaData),
+      "metaData" : metaData,
       "thumbnailMetaData" : segmentMetaData.IFD1 && makeDirectoryEntriesHumanReadable(segmentMetaData.IFD1),
       "thumbnailBlob" : segmentMetaData.thumbnailBlob
     };
