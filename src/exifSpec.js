@@ -1648,6 +1648,108 @@ var tagsStringValues = {
   }
 };
 
+var makerNotes = [
+  {
+    tagProfix: 'Reconyx',
+    firstEntry: 0,
+    test: function(value) {
+      return value === parseInt('f101', 16);
+    },
+    tags: {
+      "1" : {
+        "key": "FirmwareVersion",
+        "type": 3,
+        "count": 3,
+      },
+      "4" : {
+        "key": "FirmwareDate",
+        "type": 3,
+        "count": 2,
+      },
+      "6" : {
+        "key": "TriggerMode",
+        "type": 2,
+        "count": 1,
+      },
+      "7" : {
+        "key": "Sequence",
+        "type": 3,
+        "count": 2
+      },
+      "9" : {
+        "key": "EventNumber",
+        "type": 3,
+        "count": 2
+      },
+      "11" : {
+        "key": "DateTimeOriginal",
+        "type": 3,
+        "count": 6
+      },
+      "18" : {
+        "key": "MoonPhase",
+        "type": 3,
+        "count": 1
+      },
+      "19" : {
+        "key": "AmbientTemperatureFahrenheit",
+        "type": 8,
+        "count": 1
+      },
+      "20" : {
+        "key": "AmbientTemperature",
+        "type": 8,
+        "count": 1
+      },
+      // "21" : {
+      //   "key": "SerialNumber",
+      //   "type": 2,
+      //   "count": 30
+      // },
+      "36" : {
+        "key": "Contrast",
+        "type": 3,
+        "count": 1
+      },
+      "37" : {
+        "key": "Brightness",
+        "type": 3,
+        "count": 1
+      },
+      "38" : {
+        "key": "Sharpness",
+        "type": 3,
+        "count": 1
+      },
+      "39" : {
+        "key": "Saturation",
+        "type": 3,
+        "count": 1
+      },
+      "40" : {
+        "key": "InfraredIlluminator",
+        "type": 3,
+        "count": 1
+      },
+      "41" : {
+        "key": "MotionSensitivity",
+        "type": 3,
+        "count": 1
+      },
+      "42" : {
+        "key": "BatteryVoltage",
+        "type": 3,
+        "count": 1
+      },
+      "43" : {
+        "key": "UserLabel",
+        "type": 2,
+        "count": 22
+      },
+    }
+  }
+];
+
 // Mapping between orientation flag values and clockwise rotations in degrees
 var orientationDegrees = {
   "1" : 0,
@@ -1699,7 +1801,8 @@ this.JPEG.exifSpec = {
   getTagId: getTagId,
   tags: tags,
   interOperabilityTags: interOperabilityTags,
-  tagTypeSize: tagTypeSize
+  tagTypeSize: tagTypeSize,
+  makerNotes: makerNotes
 };
 
 }).call(this);

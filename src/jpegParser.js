@@ -193,35 +193,6 @@
     readJPEGSegments(blob, size, processSegments, validateFirstSegment);
   };
 
-  var writeMetaData = function(blob, size, newMetaData, metaDataType, callback, createNewThumbnail) {
-    var processSegments = function(error, segmentsMetaData, blobView) {
-      var segmentCreated = function(error, segmentBlob) {
-        insertSegment(segmentBlob, blob, metaDataType, callback);
-      };
-      var createSegment = function(thumbnailMetaData, thumbnailBlob) {
-        metaDataTypes[metaDataType].createSegment(
-            newMetaData, segmentCreated,
-            thumbnailBlob, thumbnailMetaData);
-      };
-      var thumbnailCreated = function(error, thumbnailBlob) {
-        createSegment({}, thumbnailBlob);
-      };
-      if (metaDataTypes[metaDataType]) {
-        if (segmentsMetaData[metaDataType]) {
-          newMetaData = JPEG.Exif.mergeObjects(segmentsMetaData[metaDataType], newMetaData);
-        }
-        if (createNewThumbnail) {
-          metaDataTypes[metaDataType].createThumbnail(blob, thumbnailCreated, 16);
-        } else {
-          createSegment(segmentsMetaData.thumbnailMetaData, segmentsMetaData.thumbnailBlob);
-        }
-      } else {
-        throw "Writting MetaData: Unknown type of MetaData " + metaDataType;
-      }
-    };
-    readJPEGSegments(blob, size, processSegments);
-  };
-
   var readExifMetaData = function(blob, callback) {
     var processMetaData = function(error, metaData) {
       var thumbnailMetaData = metaData && metaData.thumbnailMetaData;
@@ -235,13 +206,8 @@
     readMetaData(blob, Math.min((64 * 1024) + 2, blob.size), processMetaData);
   };
 
-  var writeExifMetaData = function(blob, metaData, callback) {
-    writeMetaData(blob, blob.size, metaData, "Exif", callback);
-  };
-
   this.JPEG = this.JPEG || {};
   this.JPEG.readMetaData = readMetaData;
   this.JPEG.readExifMetaData = readExifMetaData;
-  this.JPEG.writeExifMetaData = writeExifMetaData;
 
 }).call(this);

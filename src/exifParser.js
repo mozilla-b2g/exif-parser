@@ -36,79 +36,6 @@
     }
   };
 
-  var writeTagValueArray = function(blobView, valueOffset, type, arrayOfValues, byteOrder) {
-    var writtenBytes = 0;
-    var i;
-    if (Array.isArray(arrayOfValues)) {
-      for (i=0; i < arrayOfValues.length; ++i) {
-        writtenBytes += writeTagValue(
-          blobView, valueOffset + writtenBytes,
-          type, arrayOfValues[i] , byteOrder
-        );
-      }
-    } else {
-      throw "Error writting array, the value is not an array: " + arrayOfValues;
-    }
-    return writtenBytes;
-  };
-
-  var writeTagValue = function(blobView, valueOffset, typeId, newValue, byteOrder) {
-    var writtenBytes;
-    if (Array.isArray(newValue)) {
-      writtenBytes = writeTagValueArray(blobView, valueOffset, typeId, newValue, byteOrder);
-    } else {
-      switch (typeId) {
-        case 1: // BYTE
-          blobView.setUint8(valueOffset, newValue);
-          writtenBytes = 1;
-          break;
-        case 2: // ASCII
-          writtenBytes = writeString(blobView, valueOffset, newValue);
-          break;
-        case 3: // SHORT
-          blobView.setUint16(valueOffset, newValue, byteOrder);
-          writtenBytes = 2;
-          break;
-        case 4: // LONG
-          blobView.setUint32(valueOffset, newValue, byteOrder);
-          writtenBytes = 4;
-          break;
-        case 6: // SBYTE
-          blobView.setInt8(valueOffset, newValue);
-          writtenBytes = 1;
-          break;
-        case 7: // UNDEFINED
-          blobView.setUint8(valueOffset, newValue);
-          writtenBytes = 1;
-          break;
-        case 8: // SSHORT
-          blobView.setInt16(valueOffset, newValue, byteOrder);
-          writtenBytes = 2;
-          break;
-        case 9: // SLONG
-          blobView.setInt32(valueOffset, newValue, byteOrder);
-          writtenBytes = 4;
-          break;
-        case 10: // SRATIONAL
-        case 5: // RATIONAL
-          writeRational(blobView, valueOffset, typeId, newValue, byteOrder);
-          writtenBytes = 8;
-          break;
-        case 11: // FLOAT
-          blobView.setFloat32(valueOffset, newValue, byteOrder);
-          writtenBytes = 4;
-          break;
-        case 12: // DOUBLE
-          blobView.setFloat64(valueOffset, newValue, byteOrder);
-          writtenBytes = 8;
-          break;
-        default:
-          throw "Writting Exif Tag Value: Unkown value type: " + valueType;
-      }
-    }
-    return writtenBytes;
-  };
-
   var parseTagValue = function(blobView, valueOffset, typeId) {
     var numerator;
     var denominator;
@@ -169,27 +96,6 @@
     return tagValues;
   };
 
-  var writeRational = function(blobView, valueOffset, typeId, newValue, byteOrder) {
-    if (typeId === 10) { // SRATIONAL
-      blobView.setInt32(valueOffset, newValue.numerator, byteOrder);
-      blobView.setInt32(valueOffset + 4, newValue.denominator, byteOrder);
-    }
-    if (typeId === 5) { // RATIONAL
-      blobView.setUint32(valueOffset, newValue.numerator, byteOrder);
-      blobView.setUint32(valueOffset + 4, newValue.denominator, byteOrder);
-    }
-    return 8;
-  };
-
-  var writeString = function(blobView, offset, str, nullTerminated) {
-    var i;
-    for (i = 0; i < str.length; ++i) {
-      blobView.setUint8(offset + i, str.charCodeAt(i));
-    }
-    blobView.setUint8(offset + str.length, 0x0);
-    return str.length + 1;
-  };
-
   var isIndirectAddressingTag = function(typeId, count) {
     return count > 4 ||
            typeId === 5 || // RATIONAL
@@ -216,7 +122,12 @@
       tag = blobView.getUint16(offset);
       typeId = blobView.getUint16(offset + 2);
       count = blobView.getUint32(offset + 4);
+      // if (tag === 37500) {
+      //   console.log('here');
+      //   readTagValue(blobView, TIFFHeaderOffset, offset + 8, typeId, count, true);
+      // }
       entries[tag] = {
+        "tag": tag,
         "type" : typeId,
         "count" : count,
         "value" : readTagValue(blobView, TIFFHeaderOffset, offset + 8, typeId, count),
@@ -231,54 +142,55 @@
     };
   };
 
-  var writeIFD = function(blobView, TIFFHeaderOffset, IFDOffset, valuesOffset, IFDType, metaData, nextIFD) {
-    var count;
-    var bytesWritten = 0;
-    var bytesWrittenValue;
-    var numberOfEntries = 0;
-    var offset = IFDOffset + 2;
-    Object.keys(metaData).forEach(function(key){
-      var tagId = exifSpec.getTagId(key);
-      var tagInfo = exifSpec.tags[tagId];
-      if (!tagInfo) {
-        return;
-      }
-      if (tagId && tagInfo.IFD === IFDType) {
-        blobView.setUint16(offset, tagId, false); // Tag Id
-        blobView.setUint16(offset + 2, tagInfo.type, false); // Tag type
-        count = calculateTagValueCount(key, metaData[key]);
-        blobView.setUint32(offset + 4, count, false); // Tag Count. Number of values
-        if (count === 1) {
-          writeTagValue(blobView, offset + 8, tagInfo.type, metaData[key], false);
-        } else {
-          blobView.setUint32(offset + 8, valuesOffset - TIFFHeaderOffset, false);
-          bytesWrittenValue = writeTagValue(blobView, valuesOffset, tagInfo.type, metaData[key], false);
-          valuesOffset += bytesWrittenValue;
-          bytesWritten += bytesWrittenValue;
-        }
-        bytesWritten += 12;
-        offset += 12;
-        numberOfEntries++;
-      }
-    });
-    if (numberOfEntries ||
-        (IFDType === 2 && metaData.ExifTag) ||
-        (IFDType === 3 && metaData.GPSTag) ||
-        (IFDType === 4 && metaData.InteroperabilityTag)) {
+  var readMakerNote = function(blobView, TIFFHeaderOffset, IFDOffset, entry) {
+    var offset = TIFFHeaderOffset + blobView.getUint32(entry.valueOffset);
+  //
+  //     | | 8)  MakerNoteReconyx (SubDirectory) -->
+  // | |     - Tag 0x927c (713 bytes, undef[713]):
+  // | |         00e0: 01 f1 03 00 03 00 00 00 11 20 10 01 4d 00 01 00 [......... ..M...]
+  // | |         00f0: 01 00 00 00 a4 00 35 00 28 00 12 00 07 00 04 00 [......5.(.......]
 
-      blobView.setUint16(IFDOffset, numberOfEntries, false);
-      bytesWritten += 2;
+    var makerNotes = _.find(exifSpec.makerNotes, function(makerNotes) {
+      return makerNotes.test(blobView.getUint16(offset + makerNotes.firstEntry));
+    });
+
+    if (!makerNotes) {
+      return;
     }
-    // IFDType Image (IFD0) holds pointer to IFD1 (Thumbnnail)
-    if (IFDType === 1) { // Image
-      bytesWritten += 4;
-      if (nextIFD) {
-        blobView.setUint32(offset, bytesWritten + 8, false);
-      } else {
-        blobView.setUint32(offset, 0, false);
+
+    console.log(makerNotes);
+
+    function readMakerTagValue(blobView, TIFFHeaderOffset, valueOffset, typeId, count) {
+      var tagValues;
+      var typeSize = exifSpec.tagTypeSize[typeId];
+      if (count === 1 || typeId === 2) { // typeId === ASCII
+        return parseTagValue(blobView, valueOffset, typeId);
       }
+      tagValues = [];
+      for (var i=0; i<count; ++i) {
+        tagValues.push(parseTagValue(blobView, valueOffset, typeId));
+        valueOffset += typeSize;
+      }
+      return tagValues;
     }
-    return bytesWritten;
+
+    _.each(makerNotes.tags, function(tag, tagOffset) {
+      var value = readMakerTagValue(blobView, TIFFHeaderOffset,  offset + _.parseInt(tagOffset, 10) * 2, tag.type, tag.count);
+      console.log(value);
+      // var valueOffset = offset + _.parseInt(tagOffset, 10) * 2;
+      // var tagValues = [];
+      // var typeSize = exifSpec.tagTypeSize[tag.type];
+      // if (count === 1 || typeId === 2) { // typeId === ASCII
+      //   return parseTagValue(blobView, valueOffset, typeId);
+      // }
+      // for (var i=0; i<tag.count; ++i) {
+      //   tagValues.push(parseTagValue(blobView, valueOffset , tag.type));
+      //   valueOffset += typeSize;
+      // }
+      // console.log(tagValues);
+    });
+
+
   };
 
   var makeDirectoryEntriesHumanReadable = function(entries) {
@@ -325,6 +237,7 @@
     var thumbnailBlob;
     var thumbnailIFDEntries;
     var IFD0;
+    var MakerNote;
     var IFD1;
     var EXIFIFD;
     var GPSIFD;
@@ -369,6 +282,17 @@
     // Reads Interoperability IFD
     if(IFD0.entries[exifSpec.getTagId("InteroperabilityTag")]) {
       interoperabilityIFD = readIFD(blobView, TIFFHeaderOffset, IFD0.entries[exifSpec.getTagId("InteroperabilityTag")].value);
+    }
+
+    // Reads MakerNotes Block
+    if(EXIFIFD.entries[exifSpec.getTagId("MakerNote")]) {
+      MakerNote = readMakerNote(
+        blobView,
+        TIFFHeaderOffset,
+        EXIFIFD.entries[exifSpec.getTagId("MakerNote")].valueOffset,
+        EXIFIFD.entries[exifSpec.getTagId("MakerNote")]
+
+      );
     }
 
     return {
@@ -535,25 +459,6 @@
     return length;
   };
 
-  var writeSegmentHeader = function(blobView, offset, length) {
-    blobView.setUint16(offset, 0xFFE1, false); // Segment marker
-    blobView.setUint16(offset + 2, length, false);
-    blobView.setUint8(offset + 4, 0x45); // E
-    blobView.setUint8(offset + 5, 0x78); // x
-    blobView.setUint8(offset + 6, 0x69); // i
-    blobView.setUint8(offset + 7, 0x66); // f
-    blobView.setUint8(offset + 8, 0);    // \0
-    blobView.setUint8(offset + 9, 0);    // \0
-    return 10;
-  };
-
-  var writeTiffHeader = function(blobView, offset) {
-    blobView.setUint16(offset + 0, 0x4D4D, false); // byte Order
-    blobView.setUint16(offset + 2, 42, false); // Magic Number
-    blobView.setUint32(offset + 4, 8, false); // Offset to the first tag
-    return 8;
-  };
-
   var createSegment = function(metaData, callback, thumbnailBlob, thumbnailMetaData) {
     var IFDBuffer;
     var blob;
@@ -643,27 +548,6 @@
     });
   };
 
-  var createThumbnail = function(file, callback, scaleFactor) {
-    var image = new Image();
-    var thumbnailCreated = function(thumbnailBlob) {
-      callback(null, thumbnailBlob);
-    };
-    scaleFactor = scaleFactor || 8;
-    image.onload = function() {
-      var canvas = document.createElement('canvas');
-      var context = canvas.getContext('2d');
-      canvas.height = image.height / scaleFactor;
-      canvas.width = image.width / scaleFactor;
-      context.drawImage(image,
-        0, 0, image.width, image.height,
-        0, 0, canvas.width, canvas.height);
-      canvas.toBlob(thumbnailCreated, 'image/jpeg');
-      URL.revokeObjectURL(image.src);
-      image.src = '';
-    };
-    image.src = URL.createObjectURL(file);
-  };
-
   var readSegment = function(blobView, segmentOffset) {
     var segmentMetaData = readExifMetaData(blobView, segmentOffset);
     var exifMetaData = segmentMetaData.IFD0;
@@ -681,6 +565,5 @@
   this.JPEG.Exif.mergeObjects = mergeObjects;
   this.JPEG.Exif.readSegment = readSegment;
   this.JPEG.Exif.createSegment = createSegment;
-  this.JPEG.Exif.createThumbnail = createThumbnail;
 
 }).call(this);
