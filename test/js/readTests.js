@@ -1,8 +1,4 @@
-(function() {
-
-  describe('Tests read operations of Exif parser', function() {
-
-  this.timeout(8000);
+describe('Tests read operations of Exif parser', function() {
 
   it('should return error when reading an invalid jpeg file', function(done) {
     var fileBlob = new Blob(["non valid jpeg file"], {type: 'image/png'});
@@ -22,9 +18,7 @@
         done();
       });
     };
-    downloadImage('data/sample.jpg', imageDownloaded);
+    downloadImage('base/test/data/sample.jpg', imageDownloaded);
   });
 
 });
-
-}).call(this);
