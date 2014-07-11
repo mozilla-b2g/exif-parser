@@ -463,95 +463,6 @@
     return length;
   };
 
-  var createSegment = function(metaData, callback, thumbnailBlob, thumbnailMetaData) {
-    var IFDBuffer;
-    var blob;
-    var valuesOffset;
-    var offset = 0;
-    thumbnailMetaData = thumbnailMetaData || {};
-    if (thumbnailBlob) {
-      thumbnailMetaData.JPEGInterchangeFormat = 0;
-      thumbnailMetaData.JPEGInterchangeFormatLength = thumbnailBlob.size;
-      thumbnailMetaData.Orientation = metaData.Orientation;
-    }
-
-    var IFD1Lengths = calculateIFDLengths(thumbnailMetaData);
-    var IFD1Length = thumbnailBlob? IFD1Lengths.IFD0Length : 0; // Image
-    var IFD1LengthDataSection = thumbnailBlob? IFD1Lengths.IFD0LengthDataSection : 0; // Image
-
-    var IFDlengths = calculateIFDLengths(metaData);
-    var IFD0Length = IFDlengths.IFD0Length;
-    var IFD0LengthDataSection = IFDlengths.IFD0LengthDataSection;
-    var ExifIFDLength = IFDlengths.ExifIFDLength;
-    var ExifIFDLengthDataSection = IFDlengths.ExifIFDLengthDataSection;
-    var GPSIFDLength = IFDlengths.GPSIFDLength;
-    var GPSIFDLengthDataSection = IFDlengths.GPSIFDLengthDataSection;
-    var interoperabilityIFDLength =  IFDlengths.interoperabilityIFDLength;
-    var interoperabilityLengthDataSection = IFDlengths.interoperabilityLengthDataSection;
-
-    var tiffHeaderOffset;
-    var exifSegmentBlob;
-    var segmentContent = [];
-    // 2 bytes segment header + 2 bytes segment length
-    // 6 bytes Exif\0\0 string + 2 bytes endiannes code
-    // 2 bytes magic number (42) + 4 bytes 0th IFD offset
-    // Section 4.5.2 of Exif standard Version 2.2
-    var headerLength = 18;
-    var IFDLengths = headerLength + IFD0Length + IFD1Length + ExifIFDLength + GPSIFDLength + interoperabilityIFDLength;
-    var DataSectionsLength = IFD0LengthDataSection + IFD1LengthDataSection + ExifIFDLengthDataSection + GPSIFDLengthDataSection + interoperabilityLengthDataSection;
-    var segmentLength = IFDLengths + DataSectionsLength;
-    var segmentLengthWithThumbnail = thumbnailBlob? segmentLength + thumbnailBlob.size : segmentLength;
-    var writtenBytesError = "Written bytes and segment length don't match. There was a problem creating the segment";
-    IFDBuffer = new ArrayBuffer(segmentLength);
-    blob = new Blob([IFDBuffer], {type: "image/jpeg"});
-    JPEG.BlobView.get(blob, 0, blob.size, function(blobView) {
-      offset += writeSegmentHeader(blobView, offset, segmentLengthWithThumbnail - 2);
-      tiffHeaderOffset = offset;
-      offset += writeTiffHeader(blobView, offset);
-
-      if (ExifIFDLength) {
-        metaData.ExifTag = 8 + IFD0Length + IFD0LengthDataSection +
-                           IFD1Length + IFD1LengthDataSection;
-      }
-      if (GPSIFDLength) {
-        metaData.GPSTag = 8 + IFD0Length + IFD0LengthDataSection +
-                          IFD1Length + IFD1LengthDataSection +
-                          ExifIFDLength + ExifIFDLengthDataSection;
-      }
-      if (interoperabilityIFDLength) {
-        metaData.InteroperabilityTag = 8 + IFD0Length + IFD0LengthDataSection +
-                                       IFD1Length + IFD1LengthDataSection +
-                                       ExifIFDLength + ExifIFDLengthDataSection +
-                                       GPSIFDLength + GPSIFDLengthDataSection;
-      }
-
-      // IFDid = 1 (Image)
-      offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + IFD0Length, 1, metaData, ExifIFDLength);
-      if (IFD1Length) {
-        thumbnailMetaData.JPEGInterchangeFormat = segmentLength - 10;
-        // IFDid = 1 (Image)
-        offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + IFD1Length, 1, thumbnailMetaData, ExifIFDLength);
-      }
-      // IFDid = 2 (Photo)
-      offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + ExifIFDLength, 2, metaData);
-      // IFDid = 3 (GPSInfo)
-      offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + GPSIFDLength, 3, metaData);
-      // IFDid = 4 (InterOperability)
-      offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + interoperabilityIFDLength, 4, metaData);
-      if (offset !== segmentLength) {
-        console.log(writtenBytesError);
-        callback(writtenBytesError);
-        return;
-      }
-      segmentContent.push(blobView.buffer);
-      if (thumbnailMetaData && thumbnailBlob) {
-        segmentContent.push(thumbnailBlob);
-      }
-      exifSegmentBlob = new Blob(segmentContent);
-      callback(null, exifSegmentBlob);
-    });
-  };
-
   var readSegment = function(blobView, segmentOffset) {
     var segmentMetaData = readExifMetaData(blobView, segmentOffset);
     var exifMetaData = segmentMetaData.IFD0;
@@ -576,6 +487,5 @@
   this.JPEG.Exif = this.JPEG.Exif || {};
   this.JPEG.Exif.mergeObjects = mergeObjects;
   this.JPEG.Exif.readSegment = readSegment;
-  this.JPEG.Exif.createSegment = createSegment;
 
 }).call(this);
