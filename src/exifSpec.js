@@ -32,6 +32,7 @@ var tagTypesString = {
 
 var tagTypeSize = {
   1: 1, // BYTE
+  2: 1, // ASCII
   3: 2, // SHORT
   4: 4, // LONG
   5: 8, // RATIONAL
