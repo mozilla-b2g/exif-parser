@@ -3056,7 +3056,8 @@ this.JPEG.exifSpec = {
     var segmentLength;
     while (offset + 4 <= blobView.sliceLength) {
       if (!validateSegment(blobView, offset)) {
-        throw "Invalid JPEG Segment at offset " + offset;
+        console.log("Invalid JPEG Segment at offset " + offset);
+        break;
       }
       if (isAPPSegment(blobView, offset)) {
         APPSegment = parseAPPSegment(blobView, offset);
