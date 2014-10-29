@@ -191,7 +191,7 @@
         }
         resetThumbnail();
         if (metaData.thumbnailBlob) {
-          renderThumbnail(metaData.thumbnailBlob, exifSpec.orientationDegrees[loadedImageMetaData.Orientation]);
+          renderThumbnail(metaData.thumbnailBlob, JPEG.exifSpec.orientationDegrees[loadedImageMetaData.Orientation]);
         }
       });
     };
