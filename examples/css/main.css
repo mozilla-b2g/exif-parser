@@ -24,6 +24,7 @@ body{
   text-align: center;
   width: 100%;
   display: inline-block;
+  margin-top: 10px;
 }
 
 #thumbnail {
@@ -46,7 +47,9 @@ body{
 }
 */
 #thumbnailContainer {
-  padding-top: 30px;
+  padding-top: 0;
+  margin: auto;
+  margin-bottom: 50px;
 }
 
 #dropLabel{
@@ -68,8 +71,8 @@ body{
   padding-left: 10px;
 }
 
-@media (min-width: 768px) {
+/*@media (min-width: 768px) {
   .container {
     max-width: 730px;
   }
-}
+}*/
