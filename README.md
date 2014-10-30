@@ -4,7 +4,7 @@ It provides an API to read and write EXIF metadata from jpeg images.
 
 ## Try it
 
-* [Demo](http://dmarcos.github.io/exif-parser/examples).
+* [Demo](http://mozilla-b2g.github.io/exif-parser/examples).
 
 ## Use it
 
