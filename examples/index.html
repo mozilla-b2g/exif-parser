@@ -152,6 +152,7 @@
       var okIcon = document.createElement('i');
       var rotateButton = document.createElement('a');
       var saveButton = document.querySelector('#saveButton');
+      saveButton.onclick = saveFile;
       document.getElementById('dropLabel').style.display = 'none';
       tagsTable.innerHTML = "";
       if (metaData.UserComment) {
@@ -170,7 +171,6 @@
         rotateButton.innerHTML += " Rotate";
         rotateButton.style.margin = "0px 0px 5px 30px";
         rotateButton.onclick = rotateRight;
-        saveButton.onclick = saveFile;
         orientationTagValue.appendChild(rotateButton);
       }
       for (tag in metaData) {
