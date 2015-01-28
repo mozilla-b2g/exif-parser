@@ -1,6 +1,6 @@
 /**
 * jpegjs.js v0.0.1 by @dmarcos 
-* Copyright 2014 Diego Marcos <diego.marcos@gmail.com>
+* Copyright 2015 Diego Marcos <diego.marcos@gmail.com>
 * 
 */
 'use strict';
@@ -2570,7 +2570,7 @@ this.JPEG.exifSpec = {
     Object.keys(entries).forEach(function(tag) {
       tagInfo = entries.IFD === 4? interOperabilityTags.tags[tag] : exifSpec.tags[tag];
       if (!tagInfo) {
-        console.log("Error parsing IFD: Tag  " + tag + " is not valid");
+        if(showErrors) console.log("Error parsing IFD: Tag  " + tag + " is not valid");
         return;
       }
       tags[tagInfo.key] = entries[tag].value;
@@ -2638,6 +2638,8 @@ this.JPEG.exifSpec = {
       JPEGInterchangeFormat = IFD1.entries[exifSpec.getTagId("JPEGInterchangeFormat")].value;
       thumbnailBlob = blobView.blob.slice(TIFFHeaderOffset + JPEGInterchangeFormat, TIFFHeaderOffset + JPEGInterchangeFormat + JPEGInterchangeFormatLength);
     }
+
+    if(typeof IFD0.entries === 'undefined') IFD0.entries = [{}];
 
     // Reads EXIF IFD
     if (IFD0.entries[exifSpec.getTagId("ExifTag")]) {
@@ -2895,7 +2897,7 @@ this.JPEG.exifSpec = {
       // IFDid = 4 (InterOperability)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + interoperabilityIFDLength, 4, metaData);
       if (offset !== segmentLength) {
-        console.log(writtenBytesError);
+        if(showErrors) console.log(writtenBytesError);
         callback(writtenBytesError);
         return;
       }
@@ -2968,6 +2970,11 @@ this.JPEG.exifSpec = {
     "JFIF" : JPEG.JFIF
   };
 
+  var showErrors = false;
+
+  var turnErrorsOn = function() {
+    showErrors = true;
+  };
   var readSegmentMarker = function(blobView, offset) {
     return blobView.getUint8(offset + offsets.segmentMarker);
   };
@@ -3045,7 +3052,7 @@ this.JPEG.exifSpec = {
         "thumbnailBlob" : segment.thumbnailBlob
       };
     } else {
-      console.log("Unkown APP segment format: " + segmentFormat);
+      if(showErrors) console.log("Unkown APP segment format: " + segmentFormat);
     }
   };
 
@@ -3056,7 +3063,7 @@ this.JPEG.exifSpec = {
     var segmentLength;
     while (offset + 4 <= blobView.sliceLength) {
       if (!validateSegment(blobView, offset)) {
-        console.log("Invalid JPEG Segment at offset " + offset);
+        if(showErrors) console.log("Invalid JPEG Segment at offset " + offset);
         break;
       }
       if (isAPPSegment(blobView, offset)) {
@@ -3189,6 +3196,8 @@ this.JPEG.exifSpec = {
   };
 
   this.JPEG = this.JPEG || {};
+  this.showErrors = false;
+  this.JPEG.turnErrorsOn = turnErrorsOn;
   this.JPEG.readMetaData = readMetaData;
   this.JPEG.readExifMetaData = readExifMetaData;
   this.JPEG.writeExifMetaData = writeExifMetaData;
