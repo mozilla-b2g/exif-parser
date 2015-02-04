@@ -896,7 +896,7 @@ var tags = {
   "37521": { // A tag used to record fractions of seconds for the <DateTimeOriginal> tag.
     "IFD": 2,
     "key": "SubSecTimeOriginal",
-    "type": 2,
+    "type": 2
   },
   "37522": { // A tag used to record fractions of seconds for the <DateTimeDigitized> tag.
     "IFD": 2,
