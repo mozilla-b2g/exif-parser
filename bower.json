@@ -1,7 +1,7 @@
 {
   "name": "exif",
   "version": "0.1.0",
-  "main": "jpeg.js",
+  "main": "exif.js",
   "ignore": [
     "test ",
     "node_modules",

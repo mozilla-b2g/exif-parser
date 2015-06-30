@@ -1,6 +1,6 @@
 /**
 * jpegjs.js v0.0.1 by @dmarcos 
-* Copyright 2015 Diego Marcos <diego.marcos@gmail.com>
+* Copyright 2014 Diego Marcos <diego.marcos@gmail.com>
 * 
 */
 'use strict';
@@ -1368,7 +1368,7 @@ var tags = {
   "37521": { // A tag used to record fractions of seconds for the <DateTimeOriginal> tag.
     "IFD": 2,
     "key": "SubSecTimeOriginal",
-    "type": 2
+    "type": 2,
   },
   "37522": { // A tag used to record fractions of seconds for the <DateTimeDigitized> tag.
     "IFD": 2,
@@ -1608,17 +1608,17 @@ var tags = {
   "50710": { // Provides a mapping between the values in the CFAPattern tag and the plane numbers in LinearRaw space. This is a required tag for non-RGB CFA images.
     "IFD": 1,
     "key": "CFAPlaneColor",
-    "type": 1
+    "type": 1,
   },
   "50711": { // Describes the spatial layout of the CFA.
     "IFD": 1,
     "key": "CFALayout",
-    "type": 3
+    "type": 3,
   },
   "50712": { // Describes a lookup table that maps stored values into linear values. This tag is typically used to increase compression ratios by storing the raw data in a non-linear, more visually uniform space with fewer total encoding levels. If SamplesPerPixel is not equal to one, this single table applies to all the samples for each pixel.
     "IFD": 1,
     "key": "LinearizationTable",
-    "type": 3
+    "type": 3,
   },
   "50713": { // Specifies repeat pattern size for the BlackLevel tag.
     "IFD": 1,
@@ -1648,7 +1648,7 @@ var tags = {
   "50718": { // DefaultScale is required for cameras with non-square pixels. It specifies the default scale factors for each direction to convert the image to square pixels. Typically these factors are selected to approximately preserve total pixel count. For CFA images that use CFALayout equal to 2, 3, 4, or 5, such as the Fujifilm SuperCCD, these two values should usually differ by a factor of 2.0.
     "IFD": 1,
     "key": "DefaultScale",
-    "type": 5
+    "type": 5,
   },
   "50719": { // Raw images often store extra pixels around the edges of the final image. These extra pixels help prevent interpolation artifacts near the edges of the final image. DefaultCropOrigin specifies the origin of the final image area, in raw image coordinates (i.e., before the DefaultScale has been applied), relative to the top-left corner of the ActiveArea rectangle.
     "IFD": 1,
@@ -1964,7 +1964,7 @@ var tags = {
   "51008": { // Specifies the list of opcodes that should be applied to the raw image, as read directly from the file.
     "IFD": 1,
     "key": "OpcodeList1",
-    "type": 7
+    "type": 7,
   },
   "51009": { // Specifies the list of opcodes that should be applied to the raw image, just after it has been mapped to linear reference values.
     "IFD": 1,
@@ -2224,7 +2224,7 @@ this.JPEG.exifSpec = {
     0xf6 : "JPG6", 0xf7 : "JPG7", 0xf8 : "JPG8",
     0xf9 : "JPG9", 0xfa : "JPG10", 0xfb : "JPG11",
     0xfc : "JPG12", 0xfd : "JPG13",
-    0xfe : "COM"   // COMment
+    0xfe : "COM",   // COMment
   };
 
   var APPSegmentFormats = {
@@ -2235,7 +2235,7 @@ this.JPEG.exifSpec = {
       "segmentType" : "APP1"
     },
     "Exif" : { // Exchangeable image file format
-      "segmentType" : "APP0"
+      "segmentType" : "APP0",
     }
   };
 
@@ -2570,7 +2570,7 @@ this.JPEG.exifSpec = {
     Object.keys(entries).forEach(function(tag) {
       tagInfo = entries.IFD === 4? interOperabilityTags.tags[tag] : exifSpec.tags[tag];
       if (!tagInfo) {
-        if(showErrors) console.log("Error parsing IFD: Tag  " + tag + " is not valid");
+        console.log("Error parsing IFD: Tag  " + tag + " is not valid");
         return;
       }
       tags[tagInfo.key] = entries[tag].value;
@@ -2638,8 +2638,6 @@ this.JPEG.exifSpec = {
       JPEGInterchangeFormat = IFD1.entries[exifSpec.getTagId("JPEGInterchangeFormat")].value;
       thumbnailBlob = blobView.blob.slice(TIFFHeaderOffset + JPEGInterchangeFormat, TIFFHeaderOffset + JPEGInterchangeFormat + JPEGInterchangeFormatLength);
     }
-
-    if(typeof IFD0.entries === 'undefined') IFD0.entries = [{}];
 
     // Reads EXIF IFD
     if (IFD0.entries[exifSpec.getTagId("ExifTag")]) {
@@ -2897,7 +2895,7 @@ this.JPEG.exifSpec = {
       // IFDid = 4 (InterOperability)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + interoperabilityIFDLength, 4, metaData);
       if (offset !== segmentLength) {
-        if(showErrors) console.log(writtenBytesError);
+        console.log(writtenBytesError);
         callback(writtenBytesError);
         return;
       }
@@ -2970,11 +2968,6 @@ this.JPEG.exifSpec = {
     "JFIF" : JPEG.JFIF
   };
 
-  var showErrors = false;
-
-  var turnErrorsOn = function() {
-    showErrors = true;
-  };
   var readSegmentMarker = function(blobView, offset) {
     return blobView.getUint8(offset + offsets.segmentMarker);
   };
@@ -3052,7 +3045,7 @@ this.JPEG.exifSpec = {
         "thumbnailBlob" : segment.thumbnailBlob
       };
     } else {
-      if(showErrors) console.log("Unkown APP segment format: " + segmentFormat);
+      console.log("Unkown APP segment format: " + segmentFormat);
     }
   };
 
@@ -3063,7 +3056,7 @@ this.JPEG.exifSpec = {
     var segmentLength;
     while (offset + 4 <= blobView.sliceLength) {
       if (!validateSegment(blobView, offset)) {
-        if(showErrors) console.log("Invalid JPEG Segment at offset " + offset);
+        console.log("Invalid JPEG Segment at offset " + offset);
         break;
       }
       if (isAPPSegment(blobView, offset)) {
@@ -3196,8 +3189,6 @@ this.JPEG.exifSpec = {
   };
 
   this.JPEG = this.JPEG || {};
-  this.showErrors = false;
-  this.JPEG.turnErrorsOn = turnErrorsOn;
   this.JPEG.readMetaData = readMetaData;
   this.JPEG.readExifMetaData = readExifMetaData;
   this.JPEG.writeExifMetaData = writeExifMetaData;

@@ -16,11 +16,6 @@
     "JFIF" : JPEG.JFIF
   };
 
-  var showErrors = false;
-
-  var turnErrorsOn = function() {
-    showErrors = true;
-  };
   var readSegmentMarker = function(blobView, offset) {
     return blobView.getUint8(offset + offsets.segmentMarker);
   };
@@ -98,7 +93,7 @@
         "thumbnailBlob" : segment.thumbnailBlob
       };
     } else {
-      if(showErrors) console.log("Unkown APP segment format: " + segmentFormat);
+      console.log("Unkown APP segment format: " + segmentFormat);
     }
   };
 
@@ -109,7 +104,7 @@
     var segmentLength;
     while (offset + 4 <= blobView.sliceLength) {
       if (!validateSegment(blobView, offset)) {
-        if(showErrors) console.log("Invalid JPEG Segment at offset " + offset);
+        console.log("Invalid JPEG Segment at offset " + offset);
         break;
       }
       if (isAPPSegment(blobView, offset)) {
@@ -242,8 +237,6 @@
   };
 
   this.JPEG = this.JPEG || {};
-  this.showErrors = false;
-  this.JPEG.turnErrorsOn = turnErrorsOn;
   this.JPEG.readMetaData = readMetaData;
   this.JPEG.readExifMetaData = readExifMetaData;
   this.JPEG.writeExifMetaData = writeExifMetaData;

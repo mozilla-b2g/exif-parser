@@ -45,7 +45,7 @@
     0xf6 : "JPG6", 0xf7 : "JPG7", 0xf8 : "JPG8",
     0xf9 : "JPG9", 0xfa : "JPG10", 0xfb : "JPG11",
     0xfc : "JPG12", 0xfd : "JPG13",
-    0xfe : "COM"   // COMment
+    0xfe : "COM",   // COMment
   };
 
   var APPSegmentFormats = {
@@ -56,7 +56,7 @@
       "segmentType" : "APP1"
     },
     "Exif" : { // Exchangeable image file format
-      "segmentType" : "APP0"
+      "segmentType" : "APP0",
     }
   };
 
