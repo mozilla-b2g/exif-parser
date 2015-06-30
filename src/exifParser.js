@@ -294,7 +294,7 @@
     Object.keys(entries).forEach(function(tag) {
       tagInfo = entries.IFD === 4? interOperabilityTags.tags[tag] : exifSpec.tags[tag];
       if (!tagInfo) {
-        console.log("Error parsing IFD: Tag  " + tag + " is not valid");
+        if(showErrors) console.log("Error parsing IFD: Tag  " + tag + " is not valid");
         return;
       }
       tags[tagInfo.key] = entries[tag].value;
@@ -362,6 +362,8 @@
       JPEGInterchangeFormat = IFD1.entries[exifSpec.getTagId("JPEGInterchangeFormat")].value;
       thumbnailBlob = blobView.blob.slice(TIFFHeaderOffset + JPEGInterchangeFormat, TIFFHeaderOffset + JPEGInterchangeFormat + JPEGInterchangeFormatLength);
     }
+
+    if(typeof IFD0.entries === 'undefined') IFD0.entries = [{}];
 
     // Reads EXIF IFD
     if (IFD0.entries[exifSpec.getTagId("ExifTag")]) {
@@ -619,7 +621,7 @@
       // IFDid = 4 (InterOperability)
       offset += writeIFD(blobView, tiffHeaderOffset, offset, offset + interoperabilityIFDLength, 4, metaData);
       if (offset !== segmentLength) {
-        console.log(writtenBytesError);
+        if(showErrors) console.log(writtenBytesError);
         callback(writtenBytesError);
         return;
       }

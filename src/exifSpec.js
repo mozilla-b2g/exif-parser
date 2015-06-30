@@ -896,7 +896,7 @@ var tags = {
   "37521": { // A tag used to record fractions of seconds for the <DateTimeOriginal> tag.
     "IFD": 2,
     "key": "SubSecTimeOriginal",
-    "type": 2,
+    "type": 2
   },
   "37522": { // A tag used to record fractions of seconds for the <DateTimeDigitized> tag.
     "IFD": 2,
@@ -1136,17 +1136,17 @@ var tags = {
   "50710": { // Provides a mapping between the values in the CFAPattern tag and the plane numbers in LinearRaw space. This is a required tag for non-RGB CFA images.
     "IFD": 1,
     "key": "CFAPlaneColor",
-    "type": 1,
+    "type": 1
   },
   "50711": { // Describes the spatial layout of the CFA.
     "IFD": 1,
     "key": "CFALayout",
-    "type": 3,
+    "type": 3
   },
   "50712": { // Describes a lookup table that maps stored values into linear values. This tag is typically used to increase compression ratios by storing the raw data in a non-linear, more visually uniform space with fewer total encoding levels. If SamplesPerPixel is not equal to one, this single table applies to all the samples for each pixel.
     "IFD": 1,
     "key": "LinearizationTable",
-    "type": 3,
+    "type": 3
   },
   "50713": { // Specifies repeat pattern size for the BlackLevel tag.
     "IFD": 1,
@@ -1176,7 +1176,7 @@ var tags = {
   "50718": { // DefaultScale is required for cameras with non-square pixels. It specifies the default scale factors for each direction to convert the image to square pixels. Typically these factors are selected to approximately preserve total pixel count. For CFA images that use CFALayout equal to 2, 3, 4, or 5, such as the Fujifilm SuperCCD, these two values should usually differ by a factor of 2.0.
     "IFD": 1,
     "key": "DefaultScale",
-    "type": 5,
+    "type": 5
   },
   "50719": { // Raw images often store extra pixels around the edges of the final image. These extra pixels help prevent interpolation artifacts near the edges of the final image. DefaultCropOrigin specifies the origin of the final image area, in raw image coordinates (i.e., before the DefaultScale has been applied), relative to the top-left corner of the ActiveArea rectangle.
     "IFD": 1,
@@ -1492,7 +1492,7 @@ var tags = {
   "51008": { // Specifies the list of opcodes that should be applied to the raw image, as read directly from the file.
     "IFD": 1,
     "key": "OpcodeList1",
-    "type": 7,
+    "type": 7
   },
   "51009": { // Specifies the list of opcodes that should be applied to the raw image, just after it has been mapped to linear reference values.
     "IFD": 1,
