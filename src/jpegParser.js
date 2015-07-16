@@ -74,7 +74,12 @@
       previousByte = currentByte;
       offset += 1;
     }
-    return offset + 1;
+    return offset - 1;
+  };
+
+  var isEOISegment = function(blobView, offset) {
+    var segmentType = readSegmentType(blobView, offset);
+    return (segmentType === 0xd9);
   };
 
   var isAPPSegment = function(blobView, offset) {
@@ -110,6 +115,10 @@
     while (offset + 4 <= blobView.sliceLength) {
       if (!validateSegment(blobView, offset)) {
         if(showErrors) console.log("Invalid JPEG Segment at offset " + offset);
+        break;
+      }
+      if (isEOISegment(blobView, offset)) {
+        // end of image
         break;
       }
       if (isAPPSegment(blobView, offset)) {
