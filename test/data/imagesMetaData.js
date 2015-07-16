@@ -80,10 +80,10 @@ var sampleExifMetaData = {
   },
   "ExposureProgram":2,
   "ISOSpeedRatings":50,
-  "ExifVersion":48,
+  "ExifVersion":[48,50,50,49],
   "DateTimeOriginal":"2013:09:25 13:54:39",
   "DateTimeDigitized":"2013:09:25 13:54:39",
-  "ComponentsConfiguration":1,
+  "ComponentsConfiguration":[1,2,3,0],
   "ShutterSpeedValue":{
     "numerator":3686,
     "denominator":329
@@ -103,10 +103,10 @@ var sampleExifMetaData = {
     "denominator":25
   },
   "SubjectArea":[
-    0,
-    664,
-    37500,
-    7
+    1631,
+    1223,
+    1795,
+    1077
   ],
   "MakerNote":[
     65,
@@ -308,7 +308,7 @@ var sampleExifMetaData = {
   ],
   "SubSecTimeOriginal":"860",
   "SubSecTimeDigitized":"860",
-  "FlashpixVersion":48,
+  "FlashpixVersion": [48,49,48,48],
   "ColorSpace":1,
   "PixelXDimension":2448,
   "PixelYDimension":3264,

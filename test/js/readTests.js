@@ -18,6 +18,13 @@
     var imageDownloaded = function(error, fileBlob) {
       JPEG.readExifMetaData(fileBlob, function(error, exifMetaData) {
         assert.isNull(error, "the parser shouldn't return an error");
+
+        assert.deepEqual(Object.keys(exifMetaData),
+                         Object.keys(sampleExifMetaData));
+        Object.keys(exifMetaData).forEach((value) => {
+          assert.deepEqual(exifMetaData[value], sampleExifMetaData[value],
+                           "Differing value: " + value);
+        });
         assert.deepEqual(exifMetaData, sampleExifMetaData);
         done();
       });
