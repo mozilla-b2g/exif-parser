@@ -16,7 +16,8 @@
   it('should return correct metadata from a valid jpeg file', function(done) {
     var done = done;
     var imageDownloaded = function(error, fileBlob) {
-      JPEG.readExifMetaData(fileBlob, function(error, exifMetaData) {
+      JPEG.readExifMetaData(fileBlob, function(error, exifMetaData,
+                                               thumb, blob, size) {
         assert.isNull(error, "the parser shouldn't return an error");
 
         assert.deepEqual(Object.keys(exifMetaData),
@@ -26,6 +27,10 @@
                            "Differing value: " + value);
         });
         assert.deepEqual(exifMetaData, sampleExifMetaData);
+
+        assert.equal(size.width, 2448);
+        assert.equal(size.height, 3264);
+        assert.ok(!size.progressive)
         done();
       });
     };

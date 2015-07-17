@@ -2185,11 +2185,10 @@ this.JPEG.exifSpec = {
   var segmentTypes = {  // Start Of Frame
     0x01 : "TEM",  // TEMporary
     0x02 : "RES",  // REServed ... (2-191) 0x02-0xbf
-    0xc0 : "SOF0", 0xc1 : "SOF1", 0xc2 : "SOF2",
-    0xc3 : "SOF3", 0xc5 : "SOF5", 0xc6 : "SOF6",
-    0xc7 : "SOF7", 0xc9 : "SOF8", 0xca : "SOF10",
-    0xcb : "SOF11", 0xcd : "SOF13", 0xce : "SOF14",
-    0xcf : "SOF15",
+    0xc0 : "SOF0", 0xc1 : "SOF1", 0xc2 : "SOF2", 0xc3 : "SOF3",
+    0xc5 : "SOF5", 0xc6 : "SOF6", 0xc7 : "SOF7",
+    0xc9 : "SOF9", 0xca : "SOF10", 0xcb : "SOF11",
+    0xcd : "SOF13", 0xce : "SOF14", 0xcf : "SOF15",
     0xcc : "DAC",  // Define Arithmetic Coding
     0xc4 : "DHT",  // Define Huffman Table
     0xd0 : "RST0", 0xd1 : "RST1", 0xd2 : "RST2",
@@ -2245,6 +2244,7 @@ this.JPEG.exifSpec = {
   this.JPEG.jpegSpec.APPSegmentFormats = APPSegmentFormats;
 
 }).call(this);
+
 // JPEG File Interchange Format Parser
 (function() {
 
@@ -3007,13 +3007,8 @@ this.JPEG.exifSpec = {
     return true;
   };
 
-  var validateSegment = function(blobView, offset) {
-    var segmentMarker = readSegmentMarker(blobView, offset);
-    var segmentType = readSegmentType(blobView, offset);
-    if (segmentMarker === 0xff && segmentType > 0x00 && segmentType < 0xff) {
-      return true;
-    }
-    return false;
+  var validateSegment = function(segmentMarker, segmentType) {
+    return (segmentMarker === 0xff && segmentType > 0x00 && segmentType < 0xff);
   };
 
   var findNextSegmentOffset = function(blobView, offset) {
@@ -3034,17 +3029,19 @@ this.JPEG.exifSpec = {
     return offset - 1;
   };
 
-  var isEOISegment = function(blobView, offset) {
-    var segmentType = readSegmentType(blobView, offset);
+  var isSOFSegment = function(segmentType) {
+    return ((segmentType >=0xc0 && segmentType <= 0xc3) ||
+            (segmentType >=0xc5 && segmentType <= 0xc7) ||
+            (segmentType >=0xc9 && segmentType <= 0xcb) ||
+            (segmentType >=0xcd && segmentType <= 0xcf));
+  };
+
+  var isEOISegment = function(segmentType) {
     return (segmentType === 0xd9);
   };
 
-  var isAPPSegment = function(blobView, offset) {
-    var segmentType = readSegmentType(blobView, offset);
-    if (segmentType >= 0xe0 && segmentType <= 0xef) {
-      return true;
-    }
-    return false;
+  var isAPPSegment = function(segmentType) {
+    return (segmentType >= 0xe0 && segmentType <= 0xef);
   };
 
   var parseAPPSegment = function(blobView, offset) {
@@ -3070,15 +3067,22 @@ this.JPEG.exifSpec = {
     var APPSegment;
     var segmentLength;
     while (offset + 4 <= blobView.sliceLength) {
-      if (!validateSegment(blobView, offset)) {
+      var segmentMarker = readSegmentMarker(blobView, offset);
+      var segmentType = readSegmentType(blobView, offset);
+      if (!validateSegment(segmentMarker, segmentType)) {
         if(showErrors) console.log("Invalid JPEG Segment at offset " + offset);
         break;
       }
-      if (isEOISegment(blobView, offset)) {
+      if (isEOISegment(segmentType)) {
         // end of image
         break;
       }
-      if (isAPPSegment(blobView, offset)) {
+      if (isSOFSegment(segmentType)) {
+        segmentsMetaData.height = blobView.getUint16(offset + 5, false);
+        segmentsMetaData.width = blobView.getUint16(offset + 7, false);
+        segmentsMetaData.progressive = (segmentType === 0xc2);
+      }
+      if (isAPPSegment(segmentType)) {
         APPSegment = parseAPPSegment(blobView, offset);
         if (APPSegment) {
           segmentsMetaData[APPSegment.format] = APPSegment.metaData;
@@ -3194,8 +3198,13 @@ this.JPEG.exifSpec = {
     var processMetaData = function(error, metaData) {
       var thumbnailMetaData = metaData && metaData.thumbnailMetaData;
       var thumbnailBlob = metaData && metaData.thumbnailBlob;
+      var imageSize = metaData && {
+        width: metaData.width,
+        height: metaData.height,
+        progressive: metaData.progressive
+      };
       metaData = metaData && metaData.Exif;
-      callback(error, metaData, thumbnailMetaData, thumbnailBlob);
+      callback(error, metaData, thumbnailMetaData, thumbnailBlob, imageSize);
     };
     // We only read Start Of Image (SOI, 2 bytes) + APP1 segment that contains EXIF metada (64 KB)
     // Pg. 11 of Exif Standard Version 2.2
