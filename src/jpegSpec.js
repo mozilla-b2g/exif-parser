@@ -6,11 +6,10 @@
   var segmentTypes = {  // Start Of Frame
     0x01 : "TEM",  // TEMporary
     0x02 : "RES",  // REServed ... (2-191) 0x02-0xbf
-    0xc0 : "SOF0", 0xc1 : "SOF1", 0xc2 : "SOF2",
-    0xc3 : "SOF3", 0xc5 : "SOF5", 0xc6 : "SOF6",
-    0xc7 : "SOF7", 0xc9 : "SOF8", 0xca : "SOF10",
-    0xcb : "SOF11", 0xcd : "SOF13", 0xce : "SOF14",
-    0xcf : "SOF15",
+    0xc0 : "SOF0", 0xc1 : "SOF1", 0xc2 : "SOF2", 0xc3 : "SOF3",
+    0xc5 : "SOF5", 0xc6 : "SOF6", 0xc7 : "SOF7",
+    0xc9 : "SOF9", 0xca : "SOF10", 0xcb : "SOF11",
+    0xcd : "SOF13", 0xce : "SOF14", 0xcf : "SOF15",
     0xcc : "DAC",  // Define Arithmetic Coding
     0xc4 : "DHT",  // Define Huffman Table
     0xd0 : "RST0", 0xd1 : "RST1", 0xd2 : "RST2",

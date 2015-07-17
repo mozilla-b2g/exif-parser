@@ -28,10 +28,13 @@
     // with NUL separators. We're not going to interpret that here but
     // will return any such array with the NULs in it. When written back
     // out this will be in the correct format so everything should be okay.
+    // NOTE: a single string may not be NUL terminated.
     var value = "";
-    count -= 1; // The count includes the terminating NUL character
     for(var i = 0; i < count; i++) {
-      value += String.fromCharCode(blobView.getUint8(offset + i));
+      var ch = blobView.getUint8(offset + i);
+      if (ch !== 0 || i < count -1) {
+        value += String.fromCharCode(ch);
+      }
     }
     return value;
   };
@@ -47,7 +50,7 @@
         );
       }
     } else {
-      throw "Error writting array, the value is not an array: " + arrayOfValues;
+      throw "Error writing array, the value is not an array: " + arrayOfValues;
     }
     return writtenBytes;
   };
