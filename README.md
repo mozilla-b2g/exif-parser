@@ -19,13 +19,13 @@ The following code loads a file, reads the exif metadata, modifies the rotation 
 ```html
 <script>
 
-  var readMetaData = function(fileBlob) {
+  var readExif = function(fileBlob) {
     JPEG.readExifMetaData(fileBlob, function(error, metaData) {
       console.log(JSON.stringify(metaData))
     });
   };
 
-  var writeMetaData = function(fileBlob) {
+  var writeExif = function(fileBlob) {
     JPEG.writeExifMetaData(
       fileBlob,
       {"Orientation" : 1},
@@ -41,8 +41,8 @@ The following code loads a file, reads the exif metadata, modifies the rotation 
     request.onload = function (event) {
       var arrayBuffer = request.response; // Note: not request.responseText
       var blob = new Blob([arrayBuffer],{type: "image/jpeg"});
-      readMetaData(blob);
-      writeMetaData(blob);
+      readExif(blob);
+      writeExif(blob);
     };
     request.send(null);
   };
