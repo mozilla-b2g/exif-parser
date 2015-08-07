@@ -195,7 +195,7 @@
     });
   };
 
-  var readMetaData = function(blob, size, callback, validateFirstSegment) {
+  var readMetaData = function(blob, callback, validateFirstSegment) {
     var processSegments = function(error, segmentsMetaData) {
       if (error) {
         callback(error);
@@ -205,6 +205,7 @@
         callback(null, segmentsMetaData);
       }
     };
+    var size = Math.min((64 * 1024) + 2, blob.size);
     readJPEGSegments(blob, size, processSegments, validateFirstSegment);
   };
 
@@ -239,20 +240,13 @@
 
   var readExifMetaData = function(blob, callback) {
     var processMetaData = function(error, metaData) {
-      var thumbnailMetaData = metaData && metaData.thumbnailMetaData;
-      var thumbnailBlob = metaData && metaData.thumbnailBlob;
-      var imageSize = metaData && {
-        width: metaData.width,
-        height: metaData.height,
-        progressive: metaData.progressive
-      };
       metaData = metaData && metaData.Exif;
-      callback(error, metaData, thumbnailMetaData, thumbnailBlob, imageSize);
+      callback(error, metaData);
     };
     // We only read Start Of Image (SOI, 2 bytes) + APP1 segment that contains EXIF metada (64 KB)
     // Pg. 11 of Exif Standard Version 2.2
     // "The size of APP1 shall not exceed the 64 Kbytes specified in the JPEG standard"
-    readMetaData(blob, Math.min((64 * 1024) + 2, blob.size), processMetaData);
+    readMetaData(blob, processMetaData);
   };
 
   var writeExifMetaData = function(blob, metaData, callback) {

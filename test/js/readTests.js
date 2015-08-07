@@ -13,11 +13,11 @@
     });
   });
 
-  it('should return correct metadata from a valid jpeg file', function(done) {
+  it('should return correct Exif metadata from a valid Exif jpeg file',
+     function(done) {
     var done = done;
     var imageDownloaded = function(error, fileBlob) {
-      JPEG.readExifMetaData(fileBlob, function(error, exifMetaData,
-                                               thumb, blob, size) {
+      JPEG.readExifMetaData(fileBlob, function(error, exifMetaData) {
         assert.isNull(error, "the parser shouldn't return an error");
 
         assert.deepEqual(Object.keys(exifMetaData),
@@ -28,13 +28,46 @@
         });
         assert.deepEqual(exifMetaData, sampleExifMetaData);
 
-        assert.equal(size.width, 2448);
-        assert.equal(size.height, 3264);
-        assert.ok(!size.progressive)
         done();
       });
     };
     downloadImage('data/sample.jpg', imageDownloaded);
+  });
+
+  it('should return correct metadata from a valid Exif jpeg file',
+     function(done) {
+    var done = done;
+    var imageDownloaded = function(error, fileBlob) {
+      JPEG.readMetaData(fileBlob, function(error, metaData) {
+        assert.isNull(error, "the parser shouldn't return an error");
+
+        assert.deepEqual(metaData.Exif, sampleExifMetaData);
+
+        assert.equal(metaData.width, 2448);
+        assert.equal(metaData.height, 3264);
+        assert.equal(metaData.fileType, 'JPEG');
+        assert.ok(!metaData.progressive)
+        done();
+      });
+    };
+    downloadImage('data/sample.jpg', imageDownloaded);
+  });
+
+  it('should return correct metadata from a valid jpeg file',
+     function(done) {
+    var done = done;
+    var imageDownloaded = function(error, fileBlob) {
+      JPEG.readMetaData(fileBlob, function(error, metaData) {
+        assert.isNull(error, "the parser shouldn't return an error");
+        console.log(Object.keys(metaData));
+        assert.equal(metaData.width, 450);
+        assert.equal(metaData.height, 600);
+        assert.equal(metaData.fileType, 'JPEG');
+        assert.ok(!metaData.progressive)
+        done();
+      });
+    };
+    downloadImage('data/sampleNoExif.jpg', imageDownloaded);
   });
 
 });
