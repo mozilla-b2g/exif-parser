@@ -3391,8 +3391,9 @@ this.JPEG.exifSpec = {
           // if we just wrote an odd number of bytes, (e.g. an even-length
           // string plus a NUL terminator) we need to skip one so the next
           // value is written at an even offset
-          if (bytesWrittenValue % 2 === 1)
+          if (bytesWrittenValue % 2 === 1) {
             bytesWrittenValue++;
+          }
           valuesOffset += bytesWrittenValue;
           bytesWritten += bytesWrittenValue;
         }
@@ -3506,7 +3507,9 @@ this.JPEG.exifSpec = {
                                           JPEGInterchangeFormatLength);
     }
 
-    if(typeof IFD0.entries === 'undefined') IFD0.entries = [{}];
+    if(typeof IFD0.entries === 'undefined') {
+      IFD0.entries = [{}];
+    }
 
     // Reads EXIF IFD
     if (IFD0.entries[exifSpec.getTagId('ExifTag')]) {
@@ -3625,8 +3628,9 @@ this.JPEG.exifSpec = {
           valueSize = 0;
         }
         else {
-          if (valueSize % 2 === 1)
+          if (valueSize % 2 === 1) {
             valueSize += 1;
+          }
         }
 
         if (tagInfo.IFD === 1) {
@@ -3785,7 +3789,9 @@ this.JPEG.exifSpec = {
       offset += writeIFD(blobView, tiffHeaderOffset, offset,
                          offset + interoperabilityIFDLength, 4, metaData);
       if (offset !== segmentLength) {
-        if(showErrors) console.log(writtenBytesError);
+        if(showErrors) {
+          console.log(writtenBytesError);
+        }
         callback(writtenBytesError);
         return;
       }
@@ -3945,7 +3951,9 @@ this.JPEG.exifSpec = {
         'thumbnailBlob' : segment.thumbnailBlob
       };
     } else {
-      if(showErrors) console.log('Unkown APP segment format: ' + segmentFormat);
+      if(showErrors) {
+        console.log('Unkown APP segment format: ' + segmentFormat);
+      }
     }
   };
 
@@ -3958,7 +3966,9 @@ this.JPEG.exifSpec = {
       var segmentMarker = readSegmentMarker(blobView, offset);
       var segmentType = readSegmentType(blobView, offset);
       if (!validateSegment(segmentMarker, segmentType)) {
-        if(showErrors) console.log('Invalid JPEG Segment at offset ' + offset);
+        if(showErrors) {
+          console.log('Invalid JPEG Segment at offset ' + offset);
+        }
         break;
       }
       if (isEOISegment(segmentType)) {

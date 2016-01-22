@@ -1,4 +1,6 @@
 {
+  "camelcase": false,
+  "curly": true,
   "quotmark": "single",
   "maxlen": 80
 }

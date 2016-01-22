@@ -102,7 +102,9 @@
         'thumbnailBlob' : segment.thumbnailBlob
       };
     } else {
-      if(showErrors) console.log('Unkown APP segment format: ' + segmentFormat);
+      if(showErrors) {
+        console.log('Unkown APP segment format: ' + segmentFormat);
+      }
     }
   };
 
@@ -115,7 +117,9 @@
       var segmentMarker = readSegmentMarker(blobView, offset);
       var segmentType = readSegmentType(blobView, offset);
       if (!validateSegment(segmentMarker, segmentType)) {
-        if(showErrors) console.log('Invalid JPEG Segment at offset ' + offset);
+        if(showErrors) {
+          console.log('Invalid JPEG Segment at offset ' + offset);
+        }
         break;
       }
       if (isEOISegment(segmentType)) {

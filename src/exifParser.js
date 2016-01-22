@@ -272,8 +272,9 @@
           // if we just wrote an odd number of bytes, (e.g. an even-length
           // string plus a NUL terminator) we need to skip one so the next
           // value is written at an even offset
-          if (bytesWrittenValue % 2 === 1)
+          if (bytesWrittenValue % 2 === 1) {
             bytesWrittenValue++;
+          }
           valuesOffset += bytesWrittenValue;
           bytesWritten += bytesWrittenValue;
         }
@@ -387,7 +388,9 @@
                                           JPEGInterchangeFormatLength);
     }
 
-    if(typeof IFD0.entries === 'undefined') IFD0.entries = [{}];
+    if(typeof IFD0.entries === 'undefined') {
+      IFD0.entries = [{}];
+    }
 
     // Reads EXIF IFD
     if (IFD0.entries[exifSpec.getTagId('ExifTag')]) {
@@ -506,8 +509,9 @@
           valueSize = 0;
         }
         else {
-          if (valueSize % 2 === 1)
+          if (valueSize % 2 === 1) {
             valueSize += 1;
+          }
         }
 
         if (tagInfo.IFD === 1) {
@@ -666,7 +670,9 @@
       offset += writeIFD(blobView, tiffHeaderOffset, offset,
                          offset + interoperabilityIFDLength, 4, metaData);
       if (offset !== segmentLength) {
-        if(showErrors) console.log(writtenBytesError);
+        if(showErrors) {
+          console.log(writtenBytesError);
+        }
         callback(writtenBytesError);
         return;
       }
