@@ -3,13 +3,13 @@
   'use strict';
 
   var offsets = {
-    "segmentMarker" : 0,
-    "APP1Marker" : 1,
-    "APP1Length" : 2,
-    "TIFFHeader" : 10,
-    "TIFFByteOrder" : 10,
-    "TIFFMagicNumber" : 12,
-    "TIFFFirstIFD" : 14
+    'segmentMarker' : 0,
+    'APP1Marker' : 1,
+    'APP1Length' : 2,
+    'TIFFHeader' : 10,
+    'TIFFByteOrder' : 10,
+    'TIFFMagicNumber' : 12,
+    'TIFFFirstIFD' : 14
   };
 
   var exifSpec = JPEG.exifSpec;
@@ -29,7 +29,7 @@
     // will return any such array with the NULs in it. When written back
     // out this will be in the correct format so everything should be okay.
     // NOTE: a single string may not be NUL terminated.
-    var value = "";
+    var value = '';
     for(var i = 0; i < count; i++) {
       var ch = blobView.getUint8(offset + i);
       if (ch !== 0 || i < count -1) {
@@ -50,7 +50,7 @@
         );
       }
     } else {
-      throw "Error writing array, the value is not an array: " + arrayOfValues;
+      throw 'Error writing array, the value is not an array: ' + arrayOfValues;
     }
     return writtenBytes;
   };
@@ -106,7 +106,7 @@
           writtenBytes = 8;
           break;
         default:
-          throw "Writting Exif Tag Value: Unkown value type: " + valueType;
+          throw 'Writing Exif Tag Value: Unkown value type: ' + valueType;
       }
     }
     return writtenBytes;
@@ -128,8 +128,8 @@
         numerator = blobView.getUint32(valueOffset);
         denominator = blobView.getUint32(valueOffset + 4);
         return {
-          "numerator" : numerator,
-          "denominator" : denominator
+          'numerator' : numerator,
+          'denominator' : denominator
         };
       case 6: // SBYTE
         return blobView.getInt8(valueOffset);
@@ -143,15 +143,15 @@
         numerator = blobView.getInt32(valueOffset);
         denominator = blobView.getInt32(valueOffset + 4);
         return {
-          "numerator" : numerator,
-          "denominator" : denominator
+          'numerator' : numerator,
+          'denominator' : denominator
         };
       case 11: // FLOAT
         return blobView.getFloat32(valueOffset);
       case 12: // DOUBLE
        return blobView.getFloat64(valueOffset);
       default:
-        throw "Reading Exif Tag Value: Unkown value type: " + typeId;
+        throw 'Reading Exif Tag Value: Unkown value type: ' + typeId;
     }
   };
 
@@ -217,17 +217,17 @@
       typeId = blobView.getUint16(offset + 2);
       count = blobView.getUint32(offset + 4);
       entries[tag] = {
-        "type" : typeId,
-        "count" : count,
-        "value" : readTagValue(blobView, TIFFHeaderOffset, offset + 8, typeId, count),
-        "valueOffset" : offset + 8
+        'type' : typeId,
+        'count' : count,
+        'value' : readTagValue(blobView, TIFFHeaderOffset, offset + 8, typeId, count),
+        'valueOffset' : offset + 8
       };
       offset += 12;
     }
     nextIFDOffset = blobView.getUint32(offset);
     return {
-      "entries" : entries,
-      "nextIFDOffset" : nextIFDOffset
+      'entries' : entries,
+      'nextIFDOffset' : nextIFDOffset
     };
   };
 
@@ -297,7 +297,7 @@
     Object.keys(entries).forEach(function(tag) {
       tagInfo = entries.IFD === 4? interOperabilityTags.tags[tag] : exifSpec.tags[tag];
       if (!tagInfo) {
-        if(showErrors) console.log("Error parsing IFD: Tag  " + tag + " is not valid");
+        if(showErrors) console.log('Error parsing IFD: Tag  ' + tag + ' is not valid');
         return;
       }
       tags[tagInfo.key] = entries[tag].value;
@@ -308,7 +308,7 @@
   var readTIFFByteOrder = function(blobView, TIFFOffset) {
     var byteOrder = blobView.getUint16(TIFFOffset + offsets.TIFFByteOrder);
     if (byteOrder !== 0x4949 && byteOrder !== 0x4D4D) {
-      throw "TIFF Image parser failed: Invalid byte order in EXIF segment";
+      throw 'TIFF Image parser failed: Invalid byte order in EXIF segment';
     }
     return byteOrder;
   };
@@ -319,14 +319,14 @@
     } else if (byteOrder === 0x4D4D) {
       return false;
     } else {
-      throw "TIFF Image parser failed: Invalid byte order in EXIF segment";
+      throw 'TIFF Image parser failed: Invalid byte order in EXIF segment';
     }
   };
 
   var isValidTIFFFile = function(blobView, TIFFOffset) {
     var TIFFMagicNumber = blobView.getUint16(TIFFOffset + offsets.TIFFMagicNumber);
     if (TIFFMagicNumber !== 42) {
-      throw "TIFF Image parser failed: Wrong magic number in TIFF header";
+      throw 'TIFF Image parser failed: Wrong magic number in TIFF header';
     }
     return true;
   };
@@ -360,37 +360,37 @@
     }
 
     // Reads THUMBNAIL
-    if (IFD1 && IFD1.entries[exifSpec.getTagId("JPEGInterchangeFormat")]) {
-      JPEGInterchangeFormatLength = IFD1.entries[exifSpec.getTagId("JPEGInterchangeFormatLength")].value;
-      JPEGInterchangeFormat = IFD1.entries[exifSpec.getTagId("JPEGInterchangeFormat")].value;
+    if (IFD1 && IFD1.entries[exifSpec.getTagId('JPEGInterchangeFormat')]) {
+      JPEGInterchangeFormatLength = IFD1.entries[exifSpec.getTagId('JPEGInterchangeFormatLength')].value;
+      JPEGInterchangeFormat = IFD1.entries[exifSpec.getTagId('JPEGInterchangeFormat')].value;
       thumbnailBlob = blobView.blob.slice(TIFFHeaderOffset + JPEGInterchangeFormat, TIFFHeaderOffset + JPEGInterchangeFormat + JPEGInterchangeFormatLength);
     }
 
     if(typeof IFD0.entries === 'undefined') IFD0.entries = [{}];
 
     // Reads EXIF IFD
-    if (IFD0.entries[exifSpec.getTagId("ExifTag")]) {
-      EXIFIFD = readIFD(blobView, TIFFHeaderOffset, IFD0.entries[exifSpec.getTagId("ExifTag")].value);
+    if (IFD0.entries[exifSpec.getTagId('ExifTag')]) {
+      EXIFIFD = readIFD(blobView, TIFFHeaderOffset, IFD0.entries[exifSpec.getTagId('ExifTag')].value);
     }
 
     // Reads GPS IFD
-    if(IFD0.entries[exifSpec.getTagId("GPSTag")]) {
-      GPSIFD = readIFD(blobView, TIFFHeaderOffset, IFD0.entries[exifSpec.getTagId("GPSTag")].value);
+    if(IFD0.entries[exifSpec.getTagId('GPSTag')]) {
+      GPSIFD = readIFD(blobView, TIFFHeaderOffset, IFD0.entries[exifSpec.getTagId('GPSTag')].value);
     }
 
     // Reads Interoperability IFD
-    if(IFD0.entries[exifSpec.getTagId("InteroperabilityTag")]) {
-      interoperabilityIFD = readIFD(blobView, TIFFHeaderOffset, IFD0.entries[exifSpec.getTagId("InteroperabilityTag")].value);
+    if(IFD0.entries[exifSpec.getTagId('InteroperabilityTag')]) {
+      interoperabilityIFD = readIFD(blobView, TIFFHeaderOffset, IFD0.entries[exifSpec.getTagId('InteroperabilityTag')].value);
     }
 
     return {
-      "IFD0" : IFD0.entries,
-      "IFD1" : IFD1 && IFD1.entries,
-      "EXIFIFD" : EXIFIFD && EXIFIFD.entries,
-      "GPSIFD"  : GPSIFD && GPSIFD.entries,
-      "interoperabilityIFD" : interoperabilityIFD && interoperabilityIFD.entries,
-      "thumbnailBlob" : thumbnailBlob,
-      "byteOrder" : byteOrder
+      'IFD0' : IFD0.entries,
+      'IFD1' : IFD1 && IFD1.entries,
+      'EXIFIFD' : EXIFIFD && EXIFIFD.entries,
+      'GPSIFD'  : GPSIFD && GPSIFD.entries,
+      'interoperabilityIFD' : interoperabilityIFD && interoperabilityIFD.entries,
+      'thumbnailBlob' : thumbnailBlob,
+      'byteOrder' : byteOrder
     };
 
   };
@@ -424,7 +424,7 @@
         length = 8;
         break;
       default:
-        throw "Calculating Exif Tag Value Size: Unkown value type: " + tagTypeId;
+        throw 'Calculating Exif Tag Value Size: Unkown value type: ' + tagTypeId;
     }
     if (Array.isArray(value)) {
       length = value.length * length;
@@ -586,9 +586,9 @@
     var DataSectionsLength = IFD0LengthDataSection + IFD1LengthDataSection + ExifIFDLengthDataSection + GPSIFDLengthDataSection + interoperabilityLengthDataSection;
     var segmentLength = IFDLengths + DataSectionsLength;
     var segmentLengthWithThumbnail = thumbnailBlob? segmentLength + thumbnailBlob.size : segmentLength;
-    var writtenBytesError = "Written bytes and segment length don't match. There was a problem creating the segment";
+    var writtenBytesError = 'Written bytes and segment length don\'t match. There was a problem creating the segment';
     IFDBuffer = new ArrayBuffer(segmentLength);
-    blob = new Blob([IFDBuffer], {type: "image/jpeg"});
+    blob = new Blob([IFDBuffer], {type: 'image/jpeg'});
     JPEG.BlobView.get(blob, 0, blob.size, function(blobView) {
       offset += writeSegmentHeader(blobView, offset, segmentLengthWithThumbnail - 2);
       tiffHeaderOffset = offset;
@@ -664,9 +664,9 @@
     exifMetaData = mergeObjects(exifMetaData, segmentMetaData.EXIFIFD);
     exifMetaData = mergeObjects(exifMetaData, segmentMetaData.GPSIFD);
     return {
-      "metaData" : makeDirectoryEntriesHumanReadable(exifMetaData),
-      "thumbnailMetaData" : segmentMetaData.IFD1 && makeDirectoryEntriesHumanReadable(segmentMetaData.IFD1),
-      "thumbnailBlob" : segmentMetaData.thumbnailBlob
+      'metaData' : makeDirectoryEntriesHumanReadable(exifMetaData),
+      'thumbnailMetaData' : segmentMetaData.IFD1 && makeDirectoryEntriesHumanReadable(segmentMetaData.IFD1),
+      'thumbnailBlob' : segmentMetaData.thumbnailBlob
     };
   };
 

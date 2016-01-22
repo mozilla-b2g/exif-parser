@@ -7,7 +7,7 @@
     var metaData = {};
     var thumbnailBlob;
     metaData.version = blobView.getUint8(offset+9).toString();
-    metaData.version += ".0" + blobView.getUint8(offset+10);
+    metaData.version += '.0' + blobView.getUint8(offset+10);
     metaData.units = blobView.getUint8(offset+11);
     metaData.XDensity = blobView.getUint16(offset+12);
     metaData.YDensity = blobView.getUint16(offset+14);
@@ -17,8 +17,8 @@
       thumbnailBlob = blobView.blob.slice(offset + 18, 3 * metaData.XThumbnail * metaData.YThumbnail);
     }
     return {
-      "metaData" : metaData,
-      "thumbnailBlob" : thumbnailBlob
+      'metaData' : metaData,
+      'thumbnailBlob' : thumbnailBlob
     };
   };
 

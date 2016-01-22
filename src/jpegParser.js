@@ -3,17 +3,17 @@
   'use strict';
 
   var offsets = {
-    "SOIMarker" : 0,
-    "segmentMarker" : 0,
-    "segmentType" : 1,
-    "segmentLength" : 2,
-    "segmentFormat" : 4,
-    "firstSegment" : 2
+    'SOIMarker' : 0,
+    'segmentMarker' : 0,
+    'segmentType' : 1,
+    'segmentLength' : 2,
+    'segmentFormat' : 4,
+    'firstSegment' : 2
   };
 
   var metaDataTypes = {
-    "Exif" : JPEG.Exif,
-    "JFIF" : JPEG.JFIF
+    'Exif' : JPEG.Exif,
+    'JFIF' : JPEG.JFIF
   };
 
   var showErrors = false;
@@ -31,7 +31,7 @@
 
   var readSegmentLength = function(blobView, offset) {
     var segmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
-    if (segmentType === "SOS" || segmentType.indexOf("RST") === 0) {
+    if (segmentType === 'SOS' || segmentType.indexOf('RST') === 0) {
       return findNextSegmentOffset(blobView, offset) - offset;
     }
     return blobView.getUint16(offset + 2, false) + 2;
@@ -93,14 +93,14 @@
     if (metaDataTypes[segmentFormat]) {
       segment = metaDataTypes[segmentFormat].readSegment(blobView, offset);
       return {
-        "format" : segmentFormat,
-        "offset" : offset,
-        "metaData" : segment.metaData,
-        "thumbnailMetaData" : segment.thumbnailMetaData,
-        "thumbnailBlob" : segment.thumbnailBlob
+        'format' : segmentFormat,
+        'offset' : offset,
+        'metaData' : segment.metaData,
+        'thumbnailMetaData' : segment.thumbnailMetaData,
+        'thumbnailBlob' : segment.thumbnailBlob
       };
     } else {
-      if(showErrors) console.log("Unkown APP segment format: " + segmentFormat);
+      if(showErrors) console.log('Unkown APP segment format: ' + segmentFormat);
     }
   };
 
@@ -113,7 +113,7 @@
       var segmentMarker = readSegmentMarker(blobView, offset);
       var segmentType = readSegmentType(blobView, offset);
       if (!validateSegment(segmentMarker, segmentType)) {
-        if(showErrors) console.log("Invalid JPEG Segment at offset " + offset);
+        if(showErrors) console.log('Invalid JPEG Segment at offset ' + offset);
         break;
       }
       if (isEOISegment(segmentType)) {
@@ -137,7 +137,7 @@
       }
       segmentLength = readSegmentLength(blobView, offset);
       if (segmentLength <= 0) { // Corrupt segment with invalid length
-        throw "Invalid length in segement at offset: " + offset;
+        throw 'Invalid length in segement at offset: ' + offset;
       }
       offset += segmentLength;
     }
@@ -147,7 +147,7 @@
   var validateExifSegment = function(blobView, offset) {
     var firstSegmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
     var firstSegmentFormat = readSegmentFormat(blobView, offset);
-    if (firstSegmentType !== "APP1" || firstSegmentFormat !== "Exif") {
+    if (firstSegmentType !== 'APP1' || firstSegmentFormat !== 'Exif') {
       return false;
     }
     return true;
@@ -156,10 +156,10 @@
   var readJPEGSegments = function(blob, size, callback, validateFirstSegment) {
     JPEG.BlobView.get(blob, 0, size, function(blobView) {
       if (validateJPEGFile(blobView) === false) {
-        callback("Not a valid JPEG file");
+        callback('Not a valid JPEG file');
       } else {
         if (validateFirstSegment && !validateFirstSegment(blobView, 2)) {
-          callback("First segment not valid");
+          callback('First segment not valid');
         } else {
           callback(null, parseSegments(blobView), blobView);
         }
@@ -176,7 +176,7 @@
       var existingSegment;
       var fileSegments;
       if (validateJPEGFile(blobView) === false) {
-        callback("Not a valid JPEG file");
+        callback('Not a valid JPEG file');
       } else {
         fileSegments = parseSegments(blobView);
         // If the segment already exists we just replace it
@@ -189,7 +189,7 @@
           blobBeforeSegment = blobView.blob.slice(0, 2);
           blobAfterSegment = blobView.blob.slice(2, blobView.sliceLength);
         }
-        blob = new Blob([blobBeforeSegment, segmentBlob, blobAfterSegment], {type: "image/jpeg"});
+        blob = new Blob([blobBeforeSegment, segmentBlob, blobAfterSegment], {type: 'image/jpeg'});
         callback(null, blob);
       }
     });
@@ -200,7 +200,7 @@
       if (error) {
         callback(error);
       } else {
-        segmentsMetaData.fileType = "JPEG";
+        segmentsMetaData.fileType = 'JPEG';
         segmentsMetaData.fileSize = blob.size;
         callback(null, segmentsMetaData);
       }
@@ -232,7 +232,7 @@
           createSegment(segmentsMetaData.thumbnailMetaData, segmentsMetaData.thumbnailBlob);
         }
       } else {
-        throw "Writting MetaData: Unknown type of MetaData " + metaDataType;
+        throw 'Writing MetaData: Unknown type of MetaData ' + metaDataType;
       }
     };
     readJPEGSegments(blob, size, processSegments);
@@ -250,7 +250,7 @@
   };
 
   var writeExifMetaData = function(blob, metaData, callback) {
-    writeMetaData(blob, blob.size, metaData, "Exif", callback);
+    writeMetaData(blob, blob.size, metaData, 'Exif', callback);
   };
 
   this.JPEG = this.JPEG || {};
