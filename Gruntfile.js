@@ -18,7 +18,7 @@
           src: 'Gruntfile.js'
         },
         src: {
-          src: ['src/*.js']
+          src: ['src/*.js', 'lib/blob_view.js' ]
         }
       },
       pkg: grunt.file.readJSON('package.json'),
