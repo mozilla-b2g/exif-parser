@@ -30,7 +30,8 @@
   };
 
   var readSegmentLength = function(blobView, offset) {
-    var segmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
+    var segmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView,
+                                                                 offset)];
     if (segmentType === 'SOS' || segmentType.indexOf('RST') === 0) {
       return findNextSegmentOffset(blobView, offset) - offset;
     }
@@ -38,7 +39,8 @@
   };
 
   var readSegmentFormat = function(blobView, offset) {
-    return blobView.getNullTerminatedASCIIString(offset + offsets.segmentFormat);
+    return blobView.getNullTerminatedASCIIString(
+      offset + offsets.segmentFormat);
   };
 
   var validateJPEGFile = function(blobView) {
@@ -130,9 +132,12 @@
         if (APPSegment) {
           segmentsMetaData[APPSegment.format] = APPSegment.metaData;
           segmentsMetaData[APPSegment.format].segmentOffset = APPSegment.offset;
-          segmentsMetaData[APPSegment.format].segmentLength = readSegmentLength(blobView, offset);
-          segmentsMetaData.thumbnailBlob = segmentsMetaData.thumbnailBlob || APPSegment.thumbnailBlob;
-          segmentsMetaData.thumbnailMetaData = segmentsMetaData.thumbnailBlob || APPSegment.thumbnailMetaData;
+          segmentsMetaData[APPSegment.format].segmentLength =
+            readSegmentLength(blobView, offset);
+          segmentsMetaData.thumbnailBlob = segmentsMetaData.thumbnailBlob ||
+            APPSegment.thumbnailBlob;
+          segmentsMetaData.thumbnailMetaData = segmentsMetaData.thumbnailBlob ||
+            APPSegment.thumbnailMetaData;
         }
       }
       segmentLength = readSegmentLength(blobView, offset);
@@ -145,7 +150,8 @@
   };
 
   var validateExifSegment = function(blobView, offset) {
-    var firstSegmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView, offset)];
+    var firstSegmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView,
+                                                                      offset)];
     var firstSegmentFormat = readSegmentFormat(blobView, offset);
     if (firstSegmentType !== 'APP1' || firstSegmentFormat !== 'Exif') {
       return false;
@@ -182,14 +188,18 @@
         // If the segment already exists we just replace it
         if (fileSegments[metaDataType]) {
           existingSegment = fileSegments[metaDataType];
-          blobBeforeSegment = blobView.blob.slice(0, existingSegment.segmentOffset);
+          blobBeforeSegment = blobView.blob.slice(
+            0, existingSegment.segmentOffset);
           blobAfterSegment = blobView.blob.slice(
-            existingSegment.segmentOffset + existingSegment.segmentLength, blobView.sliceLength);
-        } else { // If the segment doesn't exist we push it to the front of the file
+            existingSegment.segmentOffset + existingSegment.segmentLength,
+            blobView.sliceLength);
+        } else { // If the segment doesn't exist we push it to the
+                 // front of the file
           blobBeforeSegment = blobView.blob.slice(0, 2);
           blobAfterSegment = blobView.blob.slice(2, blobView.sliceLength);
         }
-        blob = new Blob([blobBeforeSegment, segmentBlob, blobAfterSegment], {type: 'image/jpeg'});
+        blob = new Blob([blobBeforeSegment, segmentBlob, blobAfterSegment],
+                        {type: 'image/jpeg'});
         callback(null, blob);
       }
     });
@@ -209,7 +219,8 @@
     readJPEGSegments(blob, size, processSegments, validateFirstSegment);
   };
 
-  var writeMetaData = function(blob, size, newMetaData, metaDataType, callback, createNewThumbnail) {
+  var writeMetaData = function(blob, size, newMetaData, metaDataType, callback,
+                               createNewThumbnail) {
     var processSegments = function(error, segmentsMetaData, blobView) {
       var segmentCreated = function(error, segmentBlob) {
         insertSegment(segmentBlob, blob, metaDataType, callback);
@@ -224,12 +235,15 @@
       };
       if (metaDataTypes[metaDataType]) {
         if (segmentsMetaData[metaDataType]) {
-          newMetaData = JPEG.Exif.mergeObjects(segmentsMetaData[metaDataType], newMetaData);
+          newMetaData = JPEG.Exif.mergeObjects(segmentsMetaData[metaDataType],
+                                               newMetaData);
         }
         if (createNewThumbnail) {
-          metaDataTypes[metaDataType].createThumbnail(blob, thumbnailCreated, 16);
+          metaDataTypes[metaDataType].createThumbnail(blob,
+                                                      thumbnailCreated, 16);
         } else {
-          createSegment(segmentsMetaData.thumbnailMetaData, segmentsMetaData.thumbnailBlob);
+          createSegment(segmentsMetaData.thumbnailMetaData,
+                        segmentsMetaData.thumbnailBlob);
         }
       } else {
         throw 'Writing MetaData: Unknown type of MetaData ' + metaDataType;
@@ -243,9 +257,10 @@
       metaData = metaData && metaData.Exif;
       callback(error, metaData);
     };
-    // We only read Start Of Image (SOI, 2 bytes) + APP1 segment that contains EXIF metada (64 KB)
-    // Pg. 11 of Exif Standard Version 2.2
-    // "The size of APP1 shall not exceed the 64 Kbytes specified in the JPEG standard"
+    // We only read Start Of Image (SOI, 2 bytes) + APP1 segment that
+    // contains EXIF metada (64 KB) Pg. 11 of Exif Standard Version
+    // 2.2 "The size of APP1 shall not exceed the 64 Kbytes specified
+    // in the JPEG standard"
     readMetaData(blob, processMetaData);
   };
 

@@ -14,7 +14,8 @@
     metaData.XThumbnail = blobView.getUint8(offset+16);
     metaData.YThumbnail = blobView.getUint8(offset+17);
     if (metaData.XThumbnail !== 0 && metaData.YThumbnail !== 0) {
-      thumbnailBlob = blobView.blob.slice(offset + 18, 3 * metaData.XThumbnail * metaData.YThumbnail);
+      thumbnailBlob = blobView.blob.slice(
+        offset + 18, 3 * metaData.XThumbnail * metaData.YThumbnail);
     }
     return {
       'metaData' : metaData,

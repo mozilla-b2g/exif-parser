@@ -1,4 +1,4 @@
 {
-  "quotmark": "single"
-
+  "quotmark": "single",
+  "maxlen": 80
 }
