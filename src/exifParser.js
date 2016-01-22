@@ -210,11 +210,9 @@
     offset += 2;
     var i;
     var entries;
-    var entry;
     var tag;
     var typeId;
     var count;
-    var tagValueOffset;
     var nextIFDOffset;
     if (numberOfEntries > 0) {
       entries = {};
@@ -351,7 +349,6 @@
 
   var readExifMetaData = function(blobView, TIFFOffset) {
     var thumbnailBlob;
-    var thumbnailIFDEntries;
     var IFD0;
     var IFD1;
     var EXIFIFD;
@@ -490,9 +487,6 @@
       interoperabilityIFDLength: 0,
       interoperabilityLengthDataSection: 0
     };
-    var exifTagAlreadyPresent = false;
-    var gpsTagAlreadyPresent = false;
-    var interoperabilityTagAlreadyPresent = false;
     var valueSize;
     // 12 bytes is the length of each tag record.
     // 2 bytes tagID + 2 bytes tag type + 4 bytes values count
@@ -586,7 +580,6 @@
                                thumbnailMetaData) {
     var IFDBuffer;
     var blob;
-    var valuesOffset;
     var offset = 0;
     thumbnailMetaData = thumbnailMetaData || {};
     if (thumbnailBlob) {

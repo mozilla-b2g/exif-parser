@@ -154,6 +154,7 @@
     return segmentsMetaData;
   };
 
+  /*
   var validateExifSegment = function(blobView, offset) {
     var firstSegmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView,
                                                                       offset)];
@@ -163,6 +164,7 @@
     }
     return true;
   };
+  */
 
   var readJPEGSegments = function(blob, size, callback, validateFirstSegment) {
     JPEG.BlobView.get(blob, 0, size, function(blobView) {
@@ -180,7 +182,6 @@
 
   var insertSegment = function(segmentBlob, blob, metaDataType, callback) {
     JPEG.BlobView.get(blob, 0, blob.size, function(blobView) {
-      var blobSegments;
       var blob;
       var blobBeforeSegment;
       var blobAfterSegment;

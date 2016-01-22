@@ -2540,7 +2540,11 @@ this.JPEG.exifSpec = {
   orientationDegrees: orientationDegrees,
   getTagId: getTagId,
   tags: tags,
+  tagsStringValues: tagsStringValues,
   interOperabilityTags: interOperabilityTags,
+  IFDId: IFDId,
+  tagTypes: tagTypes,
+  tagTypesString: tagTypesString,
   tagTypeSize: tagTypeSize
 };
 

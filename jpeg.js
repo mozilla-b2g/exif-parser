@@ -3012,7 +3012,11 @@ this.JPEG.exifSpec = {
   orientationDegrees: orientationDegrees,
   getTagId: getTagId,
   tags: tags,
+  tagsStringValues: tagsStringValues,
   interOperabilityTags: interOperabilityTags,
+  IFDId: IFDId,
+  tagTypes: tagTypes,
+  tagTypesString: tagTypesString,
   tagTypeSize: tagTypeSize
 };
 
@@ -3329,11 +3333,9 @@ this.JPEG.exifSpec = {
     offset += 2;
     var i;
     var entries;
-    var entry;
     var tag;
     var typeId;
     var count;
-    var tagValueOffset;
     var nextIFDOffset;
     if (numberOfEntries > 0) {
       entries = {};
@@ -3470,7 +3472,6 @@ this.JPEG.exifSpec = {
 
   var readExifMetaData = function(blobView, TIFFOffset) {
     var thumbnailBlob;
-    var thumbnailIFDEntries;
     var IFD0;
     var IFD1;
     var EXIFIFD;
@@ -3609,9 +3610,6 @@ this.JPEG.exifSpec = {
       interoperabilityIFDLength: 0,
       interoperabilityLengthDataSection: 0
     };
-    var exifTagAlreadyPresent = false;
-    var gpsTagAlreadyPresent = false;
-    var interoperabilityTagAlreadyPresent = false;
     var valueSize;
     // 12 bytes is the length of each tag record.
     // 2 bytes tagID + 2 bytes tag type + 4 bytes values count
@@ -3705,7 +3703,6 @@ this.JPEG.exifSpec = {
                                thumbnailMetaData) {
     var IFDBuffer;
     var blob;
-    var valuesOffset;
     var offset = 0;
     thumbnailMetaData = thumbnailMetaData || {};
     if (thumbnailBlob) {
@@ -4005,6 +4002,7 @@ this.JPEG.exifSpec = {
     return segmentsMetaData;
   };
 
+  /*
   var validateExifSegment = function(blobView, offset) {
     var firstSegmentType = JPEG.jpegSpec.segmentTypes[readSegmentType(blobView,
                                                                       offset)];
@@ -4014,6 +4012,7 @@ this.JPEG.exifSpec = {
     }
     return true;
   };
+  */
 
   var readJPEGSegments = function(blob, size, callback, validateFirstSegment) {
     JPEG.BlobView.get(blob, 0, size, function(blobView) {
@@ -4031,7 +4030,6 @@ this.JPEG.exifSpec = {
 
   var insertSegment = function(segmentBlob, blob, metaDataType, callback) {
     JPEG.BlobView.get(blob, 0, blob.size, function(blobView) {
-      var blobSegments;
       var blob;
       var blobBeforeSegment;
       var blobAfterSegment;
