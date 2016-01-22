@@ -472,6 +472,8 @@ JPEG.BlobView = (function() {
 
 (function() {
 
+  'use strict';
+
 var tagTypes = {
   BYTE: 1,
   ASCII: 2,
