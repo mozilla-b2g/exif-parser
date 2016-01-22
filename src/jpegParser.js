@@ -1,3 +1,4 @@
+/* global JPEG, Blob, console  */
 (function() {
 
   'use strict';

@@ -3117,6 +3117,8 @@ this.JPEG.exifSpec = {
 
 }).call(this);
 
+/* global URL, document, Image, Blob, console, showErrors, JPEG,
+   ArrayBuffer, interOperabilityTags */
 (function() {
 
   'use strict';
@@ -3228,7 +3230,7 @@ this.JPEG.exifSpec = {
           writtenBytes = 8;
           break;
         default:
-          throw 'Writing Exif Tag Value: Unkown value type: ' + valueType;
+          throw 'Writing Exif Tag Value: Unkown value type: ' + typeId;
       }
     }
     return writtenBytes;
@@ -3847,6 +3849,7 @@ this.JPEG.exifSpec = {
 
 }).call(this);
 
+/* global JPEG, Blob, console  */
 (function() {
 
   'use strict';

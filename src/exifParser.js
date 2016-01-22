@@ -1,3 +1,5 @@
+/* global URL, document, Image, Blob, console, showErrors, JPEG,
+   ArrayBuffer, interOperabilityTags */
 (function() {
 
   'use strict';
@@ -109,7 +111,7 @@
           writtenBytes = 8;
           break;
         default:
-          throw 'Writing Exif Tag Value: Unkown value type: ' + valueType;
+          throw 'Writing Exif Tag Value: Unkown value type: ' + typeId;
       }
     }
     return writtenBytes;

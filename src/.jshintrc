@@ -1,6 +1,13 @@
 {
   "camelcase": false,
   "curly": true,
+  "forin": false,
+  "latedef": "nofunc",
+  "newcap": false,
+  "noarg": true,
+  "nonew": true,
   "quotmark": "single",
+  "undef": true,
+
   "maxlen": 80
 }
