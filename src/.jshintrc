@@ -10,6 +10,23 @@
   "undef": true,
   "unused": "vars",
   "strict": true,
+  "trailing": true,
+  "maxlen": 80,
 
-  "maxlen": 80
+  "eqnull": true,
+  "esnext": true,
+  "expr": true,
+  "globalstrict": true,
+
+  "maxerr": 1000,
+  "regexdash": true,
+  "laxcomma": true,
+  "proto": true,
+
+  "browser": true,
+  "devel": true,
+  "nonstandard": true,
+  "worker": true,
+
+  "-W078": true
 }
