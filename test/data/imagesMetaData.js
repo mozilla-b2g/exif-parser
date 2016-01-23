@@ -68,8 +68,6 @@ var sampleExifMetaData = {
   "Software":"7.0",
   "DateTime":"2013:09:25 13:54:39",
   "YCbCrPositioning":1,
-  "ExifTag":198,
-  "GPSTag":940,
   "ExposureTime":{
     "numerator":1,
     "denominator":2358
@@ -78,7 +76,9 @@ var sampleExifMetaData = {
     "numerator":12,
     "denominator":5
   },
+  "ExifTag":198,
   "ExposureProgram":2,
+  "GPSTag":940,
   "ISOSpeedRatings":50,
   "ExifVersion":[48,50,50,49],
   "DateTimeOriginal":"2013:09:25 13:54:39",
